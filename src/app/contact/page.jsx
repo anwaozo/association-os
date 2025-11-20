@@ -1,0 +1,278 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { Menu, MenuItem, MenuItems, MenuButton } from "@headlessui/react";
+import Header from '@/app/components/Header';
+import StatsCard from '@/app/components/StatsCard';
+import ContactAddPage from '@/app/contact/add/page';
+import ContactImportPage from '@/app/contact/import/page';
+import { useApiClient } from "@/lib/apiClient";
+import DataTable from '@/app/components/DataTable';
+import { FaEdit, FaEnvelope, FaUserMinus, FaEllipsisV, FaPhoneAlt, FaUserPlus } from 'react-icons/fa';
+import ProtectedRoute from '@/app/components/ProtectedRoute';
+import { useToast } from "@/app/components/toast/ToastContext";
+
+export default function ContactPage() {
+   const api = useApiClient();
+   const { showToast } = useToast();
+   const [contacts, setContacts] = useState([]);
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+   const [successMessage, setSuccessMessage] = useState(null);
+
+   const stats = [
+      { title: 'Total Contacts', value: 312, color: 'bg-green-200'},
+      { title: 'Active Members', value: 28, color: 'bg-red-200'},
+      { title: 'Past Due', value: 8, color: 'bg-violet-200'},
+      { title: 'Prospects', value: 15, color: 'bg-blue-200'},
+   ];
+
+   const columns = [
+      { key: "id", label: "ID" },
+      { key: "name", label: "Name" },
+      { key: "email", label: "Email" },
+      { key: "role", label: "Role" },
+   ];
+
+   const getStatusStyles = (status) => {
+      switch (status) {
+         case 'Active': return 'bg-green-100 text-green-700';
+         case 'Past Due': return 'bg-red-100 text-red-700';
+         case 'Lapsed': return 'bg-yellow-100 text-yellow-700';
+         case 'Contact': return 'bg-blue-100 text-blue-700';
+         default: return 'bg-gray-100 text-gray-700';
+      }
+   };
+
+   const actions = [
+      {
+         label: "Edit",
+         icon: <FaEdit />,
+         onClick: (row) => alert(`Edit user: ${row.id}`),
+         color: 'black',
+      },
+      {
+         label: "Send Mail",
+         icon: <FaEnvelope />,
+         onClick: (row) => alert(`Send mail to: ${row.id}`),
+         color: 'black',
+      },
+      {
+         label: "Deactivate",
+         icon: <FaUserMinus />,
+         onClick: (row) => alert(`Deactivate user: ${row.id}`),
+         color: 'red',
+      },
+   ];
+
+   const data = [
+      { id: 1, name: "John Doe", email: "john@example.com", role: "Admin" },
+      { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Editor" },
+      { id: 3, name: "Mike Johnson", email: "mike@example.com", role: "User" },
+      { id: 4, name: "Sara Lee", email: "sara@example.com", role: "Editor" },
+      { id: 5, name: "John Doe", email: "john@example.com", role: "Admin" },
+      { id: 6, name: "Jane Smith", email: "jane@example.com", role: "Editor" },
+      { id: 7, name: "Mike Johnson", email: "mike@example.com", role: "User" },
+      { id: 8, name: "Sara Lee", email: "sara@example.com", role: "Editor" },
+   ];
+
+   const formatToReadableDate = (isoString) => {
+      const date = new Date(isoString);
+      return date.toLocaleDateString("en-US", {
+         month: "short",
+         day: "2-digit",
+         year: "numeric",
+      });
+   };
+
+   useEffect(() => {
+      const fetchContacts = async () => {
+         const res = await api.get("/contacts");
+         if (res.data) {
+            setContacts(res.data);
+         }
+      };
+
+      fetchContacts();
+   }, []);
+
+   /** Contact Add New Model Start */
+   const openContactAddModal = () => setIsModalOpen(true);
+
+   const handleAddContact = async (contactData) => {
+      const newContact = {
+         name: `${contactData.firstName} ${contactData.lastName}`,
+         email: contactData.email,
+         phone: contactData.phone || 'N/A',
+         role: contactData.status
+      };
+
+      try {
+         const res = await api.post("/auth/register", newContact);
+         showToast(`Contact ${newContact.name} added successfully!`);
+         setIsModalOpen(false);
+         const list = await api.get("/contacts");
+         setContacts(list.data);
+      } catch (err) {
+      }
+   };
+   /** Contact Add New Model End */
+
+   /** Contact Import Model Start */
+   const openContactImportModal = () => setIsImportModalOpen(true);
+
+   const handleBulkImport = (newContacts) => {
+      const currentMaxId = contacts.reduce((max, contact) => Math.max(max, contact.id), 0);
+      let nextId = currentMaxId + 1;
+
+      const formattedNewContacts = newContacts.map(c => ({
+         id: nextId++,
+         name: `${c.firstName} ${c.lastName}`,
+         email: c.email,
+         phone: c.phone || 'N/A',
+         status: c.status || 'Contact',
+         tier: c.status === 'Active' ? 'Bulk Imported' : 'New Prospect',
+         joinDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      }));
+
+      setContacts([...formattedNewContacts, ...contacts]);
+      setSuccessMessage(`${formattedNewContacts.length} contacts imported successfully!`);
+      
+      setIsImportModalOpen(false);
+
+      setTimeout(() => {
+         setSuccessMessage(null);
+      }, 3000);
+   };
+   /** Contact Import Model End */
+
+   return (
+      <ProtectedRoute>
+         <Header title="Contacts & Members" subTitle="Manage your organization's contacts and membership" />
+
+         {/* Stats Grid */}
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            {stats.map((item, i) => (
+            <StatsCard key={i} title={item.title} value={item.value} color={item.color} icon={item.icon} />
+            ))}
+         </div>
+
+         <div className="bg-white p-6 rounded-xl shadow-xl border border-gray-100">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between w-full">
+               <div>
+                  <h2 className="text-xl font-semibold mb-2">All Contacts</h2>
+                  <p className="text-gray-400 mb-4 md:mb-0">View and manage all contacts and members</p>
+               </div>
+
+               <div className="flex items-center space-x-3">
+                  <button className="flex items-center px-4 py-2 bg-[#FF7A2C] rounded-lg text-white font-medium rounded-lg transition shadow-md" onClick={openContactAddModal}>
+                     <FaUserPlus className="mr-2" /> Add Contact
+                  </button>
+                     
+                  <button className="flex items-center px-4 py-2 bg-white border border-gray-600 rounded-lg text-black font-medium" onClick={openContactImportModal}>
+                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                     Import CSV
+                  </button>
+               </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row justify-between items-center mt-10 mb-6 gap-4">
+               <div className="relative flex-grow w-full md:max-w-3xl">
+                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                  <input type="text" placeholder="Search by name, number or email..." className="w-full pl-10 pr-4 py-2 bg-white border border-gray-600 rounded-lg text-black placeholder-gray-400 focus:ring-orange-500 focus:border-orange-500" />
+               </div>
+
+               <div className="flex items-center space-x-3 w-full md:w-auto">
+                  <button className="flex items-center px-4 py-2 bg-white text-black border border-gray-600 rounded-lg">
+                     All Status
+                     <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </button>
+                     
+                  <button className="flex items-center px-4 py-2 bg-white border border-gray-600 rounded-lg text-black">
+                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Download
+                  </button>
+               </div>
+            </div>
+
+            <div className="overflow-x-auto">
+               <table className="min-w-full border border-gray-200 rounded-lg">
+                  <thead className="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
+                     <tr>
+                        <th className="px-6 py-3 text-left">Name</th>
+                        <th className="px-6 py-3 text-left">Contact</th>
+                        <th className="px-6 py-3 text-left">Status</th>
+                        <th className="px-6 py-3 text-left">Tier</th>
+                        <th className="px-6 py-3 text-left">Join Date</th>
+                        <th className="px-6 py-3 text-right">Actions</th>
+                     </tr>
+                  </thead>
+
+                  <tbody className="divide-y divide-gray-100 text-sm text-gray-800">
+                     {contacts.map(contact => (
+                     <tr key={contact.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 font-medium">{contact.name}</td>
+                        <td className="px-6 py-4">
+                           <div className="flex items-center gap-1">
+                              <FaEnvelope className="text-gray-500" />
+                              <span>{contact.email}</span>
+                           </div>
+                           <div className="flex items-center gap-1 text-gray-600">
+                              <FaPhoneAlt className="text-gray-500" />
+                              <span>{contact.phone}</span>
+                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                           <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">
+                              {contact.role === 2 ? 'Member': 'Contact'}
+                           </span>
+                        </td>
+                        <td className="px-6 py-4">{contact.membershipId}</td>
+                        <td className="px-6 py-4">{formatToReadableDate(contact.createdAt)}</td>
+                        <td className="px-6 py-4 text-right">
+                           <Menu as="div" className="relative inline-block text-left">
+                              <MenuButton className="p-2 rounded hover:bg-gray-100">
+                                 <FaEllipsisV className="w-5 h-5 text-gray-600" />
+                              </MenuButton>
+
+                              <MenuItems className="absolute right-0 mt-2 w-36 origin-top-right bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                                 <div className="py-1">
+                                 {actions.map((action, i) => (
+                                    <MenuItem key={i}>
+                                       {({ active }) => (
+                                       <button
+                                          onClick={() => action.onClick(row)}
+                                          className={`flex items-center gap-2 w-full px-4 py-2 text-sm ${
+                                             active ? "bg-gray-50" : ""
+                                          } ${action.color === "red" ? "text-red-600" : "text-gray-700"}`}
+                                       >
+                                          {action.icon && <span>{action.icon}</span>}
+                                          <span>{action.label}</span>
+                                       </button>
+                                       )}
+                                    </MenuItem>
+                                 ))}
+                                 </div>
+                              </MenuItems>
+                           </Menu>
+                        </td>
+                     </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+
+         {/* <DataTable name="All Contacts" columns={columns} data={data} actions={actions} /> */}
+
+         <ContactAddPage 
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onAddContact={handleAddContact}
+         />
+         <ContactImportPage 
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            onBulkImport={handleBulkImport}
+         />
+      </ProtectedRoute>
+   );
+}
