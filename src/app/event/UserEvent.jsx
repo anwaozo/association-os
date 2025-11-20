@@ -11,16 +11,21 @@ export default function UserEvent() {
    const [activeTab, setActiveTab] = useState('upcoming');
    const [upcoming, setUpcoming] = useState([]);
    const [past, setPast] = useState([]);
+   const [myRSVPs, setMyRSVPs] = useState([]);
+   const [loading, setLoading] = useState(true);
+
+   const fetchUserEvents = async () => {
+      setLoading(true);
+      const res = await api.get("/events/user");
+      if (res.data) {
+         setUpcoming(res.data.upcomingEvents);
+         setPast(res.data.pastEvents);
+         setMyRSVPs(res.data.myRsvp);
+         setLoading(false);
+      }
+   };
 
    useEffect(() => {
-      const fetchUserEvents = async () => {
-         const res = await api.get("/events/user");
-         if (res.data) {
-            setUpcoming(res.data.upcomingEvents);
-            setPast(res.data.pastEvents);
-         }
-      };
-
       fetchUserEvents();
    }, []);
 
@@ -53,8 +58,8 @@ export default function UserEvent() {
 
 
          <div className="tab-content">
-            {activeTab === 'upcoming' && <UpComingEvent upcoming={upcoming} />}
-            {activeTab === 'past' && <PastEvent past={past} />}
+            {activeTab === 'upcoming' && <UpComingEvent upcomingEvents={upcoming} myRSVPs={myRSVPs} refresh={fetchUserEvents} />}
+            {activeTab === 'past' && <PastEvent pastEvents={past} refresh={fetchUserEvents} />}
          </div>
 
 

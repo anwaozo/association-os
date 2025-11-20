@@ -7,54 +7,42 @@ import { FaLocationPin } from 'react-icons/fa6';
 import { useApiClient } from "@/lib/apiClient";
 import { useToast } from "@/app/components/toast/ToastContext";
 
-export default function UpComingEvent({upcoming}) {
+export default function UpComingEvent({upcomingEvents, myRSVPs, refresh}) {
    const api = useApiClient();
    const { showToast } = useToast();
-   
-   
-   const upcomingEvents = [
-   {
-      title: 'Annual Gala Dinner',
-      date: 'Oct 15, 2025',
-      time: '6:00 - 10:00',
-      location: 'Grand Ballroom',
-      description: 'Join us for our annual celebration with distinguished guests and members.',
-      attendees: '85/100 attending',
-      status: 'Upcoming',
-      isAttending: true,
-   },
-   {
-      title: 'Networking Breakfast',
-      date: 'Oct 23, 2025',
-      time: '08:00 - 9:30',
-      location: 'Chapter Room',
-      description: 'Connect with fellow members over breakfast and coffee.',
-      attendees: '24/30 attending',
-      status: 'Upcoming',
-      isAttending: true,
-   },
-   // ... other events
-   ];
 
    const RSVPNow = async (id) => {
       console.log(id);
       const res = await api.post("/events/rsvp", {event_id: id});
-         if (res.data) {
-            showToast("RSVP's Added Successfully!", "success");
-         }
+      if (res.data) {
+         showToast("RSVP's Added Successfully!", "success");
+         refresh();
+      }
    };
 
-   const rsvpItems = [
-      { title: 'Networking Mixer', date: 'Nov 22, 2025', status: 'In Calendar' },
-      { title: 'Annual Gala Dinner', date: 'Oct 22, 2025', status: 'Add to calendar' },
-   ];
+   const CancelRSVP = async (rsvpId) => {
+      const confirmDelete = confirm("Are you sure you want to cancel RSVP?");
+      if (!confirmDelete) return;
+
+      const res = await api.delete(`/events/rsvp/${rsvpId}`, {
+         method: "DELETE",
+      });
+
+      if (res.data) {
+         showToast("RSVP Cancelled!", "success");
+      } else {
+         const data = await res.json();
+         alert("Error: " + data.message);
+      }
+      refresh();
+   };
 
    return (
       <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
          <div className="flex">
             <div className="flex-grow pr-8 space-y-6">
                <h3 className="text-xl font-semibold mb-4">Upcoming Events</h3>
-               {upcoming.map(event => (
+               {upcomingEvents.map(event => (
                   <div key={event.title} className="bg-white p-6 rounded-lg shadow border border-gray-100 flex justify-between items-start">
                      <div className="flex-1">
                         <div className="flex items-center mb-2">
@@ -70,15 +58,20 @@ export default function UpComingEvent({upcoming}) {
                         <p className="text-sm text-gray-700 mt-4">{event.description}</p>
                      </div>
                      <button 
-                        className={`flex-shrink-0 px-4 py-1 text-sm font-medium rounded-md border
+                        className={`flex-shrink-0 px-4 py-1 text-sm font-medium rounded-md border cursor-pointer
                            ${event.isAttending 
-                              ? "bg-gray-200 text-gray-500 cursor-not-allowed" 
-                              : "bg-white text-black cursor-pointer"
+                              ? "bg-gray-200 text-gray-500" 
+                              : "bg-white text-black "
                            }`}
-                        onClick={() => !event.isAttending && RSVPNow(event.id)}
-                        disabled={event.isAttending}
+                        onClick={() => {
+                           if (!event.isAttending) {
+                              RSVPNow(event.id);
+                           } else {
+                              CancelRSVP(event.id);
+                           }
+                        }}
                      >
-                        {event.isAttending ? 'RSVP Done' : 'RSVP Now'}
+                        {event.isAttending === false ? 'RSVP Now' : (event.isAttending === true ? 'Cancel RSVP': 'RSVP Now')}
                      </button>
                   </div>
                ))}
@@ -87,10 +80,10 @@ export default function UpComingEvent({upcoming}) {
                <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-4">My RSVPs</h3>
                   <div className="space-y-4">
-                     {rsvpItems.map((item, index) => (
-                        <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
-                           <h4 className="text-sm font-medium text-gray-900">{item.title}</h4>
-                           <p className="text-xs text-gray-500 mb-2">{item.date}</p>
+                     {myRSVPs.map(item => (
+                        <div key={item.event.title} className="bg-white p-4 rounded-lg border border-gray-200">
+                           <h4 className="text-sm font-medium text-gray-900">{item.event.title}</h4>
+                           <p className="text-xs text-gray-500 mb-2">{formatToReadableDate(item.date)}</p>
                            <button className={`w-full text-xs py-1 rounded ${
                               item.status === 'In Calendar' 
                                  ? 'bg-green-50 text-green-700' 
@@ -100,21 +93,6 @@ export default function UpComingEvent({upcoming}) {
                            </button>
                         </div>
                      ))}
-                     {/* Added a few more items for visual completeness */}
-                     <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <h4 className="text-sm font-medium text-gray-900">Annual Gala Dinner</h4>
-                        <p className="text-xs text-gray-500 mb-2">Oct 22, 2025</p>
-                        <button className="w-full text-xs py-1 rounded text-indigo-600 border border-indigo-200 hover:bg-indigo-50">
-                           Add to calendar
-                        </button>
-                     </div>
-                     <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <h4 className="text-sm font-medium text-gray-900">Annual Gala Dinner</h4>
-                        <p className="text-xs text-gray-500 mb-2">Oct 22, 2025</p>
-                        <button className="w-full text-xs py-1 rounded text-indigo-600 border border-indigo-200 hover:bg-indigo-50">
-                           Add to calendar
-                        </button>
-                     </div>
                   </div>
                </div>
             </div>
