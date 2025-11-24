@@ -170,7 +170,7 @@ export default function EventAddPage({ isOpen, onClose, onSave }) {
                      Cancel
                   </button>
                   <button
-                     className="px-4 py-2 bg-orange-600 rounded-lg text-white font-medium rounded-lg transition shadow-md"
+                     className="px-4 py-2 bg-[#FF7A2C] rounded-lg text-white font-medium rounded-lg transition shadow-md"
                   >
                      Create Event
                   </button>

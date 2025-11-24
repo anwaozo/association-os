@@ -3,7 +3,18 @@ import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { usePathname, useRouter } from "next/navigation";
-import { FaHome, FaUsers, FaCalendarAlt, FaCog, FaBars, FaEnvelope, FaDatabase, FaMoneyBill, FaComments, FaSignOutAlt } from 'react-icons/fa';
+import { 
+  LayoutGrid, 
+  Users, 
+  Calendar, 
+  Layers, 
+  DollarSign, 
+  Bell, 
+  Settings, 
+  LogOut, 
+  Menu,
+  Mail
+} from 'lucide-react';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
    const { state, logout } = useAuth();
@@ -12,14 +23,14 @@ export default function Sidebar({ isOpen, setIsOpen }) {
    const router = useRouter();
 
    const menuItems = user?.role === 1 ? [
-      { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
-      { name: 'Contacts & Members', icon: <FaUsers />, href: '/contact' },
-      { name: 'Events', icon: <FaCalendarAlt />, href: '/event' },
-      { name: 'Membership Tiers', icon: <FaDatabase />, href: '/membership' },
-      { name: 'Fundraising', icon: <FaMoneyBill />, href: '/fundraising' },
-      { name: 'Notifications', icon: <FaEnvelope />, href: '/notification' },
-      { name: 'Messages', icon: <FaComments />, href: '/message' },
-      { name: 'Settings', icon: <FaCog />, href: '/settings' },
+      { name: 'Dashboard', icon: <LayoutGrid size={18} />, href: '/dashboard' },
+      { name: 'Contacts & Members', icon: <Users size={18} />, href: '/contact' },
+      { name: 'Events', icon: <Calendar size={18} />, href: '/event' },
+      { name: 'Membership Tiers', icon: <Layers size={18} />, href: '/membership' },
+      { name: 'Fundraising', icon: <DollarSign size={18} />, href: '/fundraising' },
+      { name: 'Notifications', icon: <Bell size={18} />, href: '/notification' },
+      { name: 'Messages', icon: <Mail size={18} />, href: '/message' },
+      { name: 'Settings', icon: <Settings size={18} />, href: '/settings' },
    ] : (user?.role === 2 ? [
       { name: 'Home', icon: <FaHome />, href: '/dashboard' },
       { name: 'Events', icon: <FaCalendarAlt />, href: '/event' },
@@ -46,7 +57,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                <button 
                   onClick={() => setIsOpen(!isOpen)} 
                   className="flex space-x-3 p-1.5 text-gray-700 items-center justify-between hover:text-blue-600 ">
-                  <FaBars size={20} />
+                  <Menu size={20} />
                </button>
             </div>
 
@@ -74,7 +85,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
          <div className="mt-4">
             <hr className="border-t border-gray-300 mb-2" />
             <a style={{cursor: 'pointer'}} onClick={logout} className="flex items-center space-x-3 p-1.5 rounded-lg text-gray-900 hover:bg-gray-700 hover:text-white transition-all">
-               <span className="text-lg"><FaSignOutAlt /></span>
+               <span className="text-lg"><LogOut size={18} /></span>
                {isOpen && <span className="font-medium">Logout</span>}
             </a>
          </div>

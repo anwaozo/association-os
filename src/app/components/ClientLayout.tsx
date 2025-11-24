@@ -38,10 +38,13 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
          {showSidebar ? (
          <div className="flex h-screen bg-white text-gray-800">
             <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
-            <main className={`flex-1 p-6 overflow-y-auto ${isDashboard ? 'dashboard-main-bg' : ''}`}>{children}</main>
+
+            <main className={`flex-1 p-6 overflow-y-auto w-full min-w-0 relative ${isDashboard ? 'dashboard-main-bg' : ''}`}>
+               {children}
+            </main>
          </div>
          ) : (
-         <>{children}</>
+         children
          )}
       </>
    );

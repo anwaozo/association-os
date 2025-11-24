@@ -3,190 +3,187 @@ import { Fragment } from 'react';
 import Link from 'next/link';
 import Header from '@/app/components/Header';
 import StatsCard from '@/app/components/StatsCard';
+import { UserPlus, Calendar, Mail, Upload, Layers, DollarSign, ArrowRight, UserCheck, UserX,  TrendingUp } from 'lucide-react';
 
-export default function AdminDashboard({stats, actions}) {
+
+export default function AdminDashboard() {
+
+   const stats = [
+      { title: 'Active Members', value: 312, color: 'green', icon: <UserCheck size={16}/>, 'info': '93% of total' },
+      { title: 'Past Due', value: 28, color: 'red', icon: <UserX size={16} />, 'info': '7% of total' },
+      { title: 'Upcomming Events', value: 8, color: 'violet', icon: <Calendar size={16} />, 'info': 'Next 30 days' },
+      { title: 'Funds Raised YTD', value: 15, color: 'blue', icon: <TrendingUp size={16} />, 'info': '85% of goal' },
+   ];
+   
+   const actions = [
+      {title: 'Add Member', icon: <UserPlus />},
+      {title: 'Create Event', icon: <Calendar />},
+      {title: 'Send Message', icon: <Mail />},
+      {title: 'Import Contact', icon: <Upload />},
+      {title: 'Create Tier', icon: <Layers />},
+      {title: 'Create Campaign', icon: <DollarSign />},
+   ];
+
+   const upcomingEvents = [
+      {
+         name:"Annual Gala Dinner",
+         date:"Nov 15, 2025",
+         count:"127/150", 
+         percent:"85% full"
+      },
+      {
+         name:"Networking Mixer",
+         date:"Nov 22, 2025",
+         count:"45/75", 
+         percent:"60% full"
+      },
+      {
+         name:"Holiday Charity Drive",
+         date:"Dec 10, 2025",
+         count:"32/100", 
+         percent:"32% full"
+      }
+   ];
+
+   const activityItems = [
+      {
+         title:"New member joined: Sarah Thompson",
+         time:"2 hours ago" 
+      },
+      {
+         title:"Payment received: Michael Chen - $100",
+         time:"5 hours ago" 
+      },
+      {
+         title:"New event RSVP: Emily Rodriguez for Annual Gala",
+         time:"1 day ago" 
+      },
+      {
+         title:"Donation received: Anonymous - $500",
+         time:"2 days ago" 
+      }
+   ];
+
+   const attentionCards = [
+      { name:"John Anderson", issue:"Payment past due", badge:"5d"},
+      { name:"Sarah Mitchell", issue:"Payment past due", badge:"3d"},
+      { name:"David Chen", issue:"Membership expiring soon", badge:"7d"}
+   ];
 
    return (
-      <Fragment>
+      <div className="relative z-10">
          <Header title="Good Morning, Admin" subTitle="Welcome back! Here's what's happening in The Friar Society." />
 
-         
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            {stats.map((item, i) => (
-            <StatsCard key={i} title={item.title} value={item.value} color={item.color} icon={item.icon} info={item.info} />
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {stats.map(item => (
+            <StatsCard key={item.title} title={item.title} value={item.value} color={item.color} icon={item.icon} info={item.info} />
             ))}
          </div>
 
-         
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-               <div className="bg-white p-6 rounded-xl border border-gray-200 card-shadow">
-                  <div className="flex justify-between items-center mb-4">
-                     <h2 className="text-lg font-semibold text-gray-800">Upcoming Events</h2>
-                     <Link href="/event" className="text-sm font-medium text-orange-600 hover:underline flex items-center">
-                           View All 
-                           <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                     </Link>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-6">Events in the next 30 days</p>
-
-                  <div className="flex justify-between items-center py-3 border-b border-gray-200">
-                     <div>
-                        <p className="font-medium text-gray-800">Annual Gala Dinner</p>
-                        <p className="text-xs text-gray-500">Nov 15, 2025</p>
-                     </div>
-                     <p className="text-sm font-medium text-orange-600">127/150 <span className="text-xs text-gray-500 ml-1">85% full</span></p>
-                  </div>
-
-                  {/* Event List Item 2 */}
-                  <div className="flex justify-between items-center py-3 border-b border-gray-200">
-                     <div>
-                           <p className="font-medium text-gray-800">Networking Mixer</p>
-                           <p className="text-xs text-gray-500">Nov 22, 2025</p>
-                     </div>
-                     <p className="text-sm font-medium text-orange-600">45/75 <span className="text-xs text-gray-500 ml-1">60% full</span></p>
-                  </div>
-
-                  {/* Event List Item 3 */}
-                  <div className="flex justify-between items-center pt-3">
-                     <div>
-                           <p className="font-medium text-gray-800">Holiday Charity Drive</p>
-                           <p className="text-xs text-gray-500">Dec 10, 2025</p>
-                     </div>
-                     <p className="text-sm font-medium text-orange-600">32/100 <span className="text-xs text-gray-500 ml-1">32% full</span></p>
-                  </div>
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            
+            {/* Upcoming Events List (Takes up 2 columns) */}
+            <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="flex justify-between items-center mb-6">
+               <div>
+                  <h3 className="font-semibold text-lg">Upcoming Events</h3>
+                  <p className="text-slate-500 text-sm">Events in the next 30 days</p>
                </div>
-
-               <div className="bg-white p-6 rounded-xl border border-gray-200 card-shadow">
-                  <div className="flex justify-between items-center mb-6">
-                     <h2 className="text-lg font-semibold text-gray-800">Recent Activity</h2>
-                     <a href="#" className="text-sm font-medium text-orange-600 hover:underline flex items-center">
-                           View All
-                           <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                     </a>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-4">Latest updates from your organization</p>
-
-                  {/* Activity List */}
-                  <ul className="space-y-4">
-                     <li className="flex items-start">
-                           <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                           <div>
-                              <p className="text-sm text-gray-700">New member joined: <span className="font-medium text-orange-600">Sarah Thompson</span></p>
-                              <p className="text-xs text-gray-500">2 hours ago</p>
-                           </div>
-                     </li>
-                     <li className="flex items-start">
-                           <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                           <div>
-                              <p className="text-sm text-gray-700">Payment received: <span className="font-medium text-green-600">Michael Chen - $100</span></p>
-                              <p className="text-xs text-gray-500">9 hours ago</p>
-                           </div>
-                     </li>
-                     <li className="flex items-start">
-                           <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                           <div>
-                              <p className="text-sm text-gray-700">New event RSVP: <span className="font-medium text-orange-600">Emily Rodriguez for Annual Gala</span></p>
-                              <p className="text-xs text-gray-500">1 day ago</p>
-                           </div>
-                     </li>
-                     <li className="flex items-start">
-                           <span className="w-2 h-2 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                           <div>
-                              <p className="text-sm text-gray-700">Donation received: <span className="font-medium text-green-600">Anonymous - $500</span></p>
-                              <p className="text-xs text-gray-500">2 days ago</p>
-                           </div>
-                     </li>
-                  </ul>
-               </div>
+               <button className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900">
+                  View All <ArrowRight size={16} />
+               </button>
             </div>
 
-            {/* Column 2 (Quick Actions & Needs Attention) */}
-            <div className="lg:col-span-1 space-y-6">
-
-                  {/* Quick Actions Card */}
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 card-shadow">
-                     <h2 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
-                     <p className="text-sm text-gray-500 mb-6">Common tasks and shortcuts</p>
-                     
-                     <div className="grid grid-cols-2 gap-4">
-                        {/* Action 1: Add Member */}
-                        <button className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg text-gray-600 hover:bg-orange-100 hover:text-orange-600 transition border border-gray-200">
-                              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-                              <span className="text-sm">Add Member</span>
-                        </button>
-                        {/* Action 2: Create Event */}
-                        <button className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg text-gray-600 hover:bg-orange-100 hover:text-orange-600 transition border border-gray-200">
-                              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                              <span className="text-sm">Create Event</span>
-                        </button>
-                        {/* Action 3: Send Message */}
-                        <button className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg text-gray-600 hover:bg-orange-100 hover:text-orange-600 transition border border-gray-200">
-                              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.605A9.702 9.702 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                              <span className="text-sm">Send Message</span>
-                        </button>
-                        {/* Action 4: Import Contact */}
-                        <button className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg text-gray-600 hover:bg-orange-100 hover:text-orange-600 transition border border-gray-200">
-                              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                              <span className="text-sm">Import Contact</span>
-                        </button>
-                        {/* Action 5: Create Tier */}
-                        <button className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg text-gray-600 hover:bg-orange-100 hover:text-orange-600 transition border border-gray-200">
-                              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h.01M3 14h.01M3 18h.01M16 16h2a2 2 0 002-2v-4a2 2 0 00-2-2h-4a2 2 0 00-2 2v4a2 2 0 002 2zM3 6h.01M16 6h2a2 2 0 002-2V2a2 2 0 00-2-2h-4a2 2 0 00-2 2v2a2 2 0 002 2zM3 6h.01M16 6h2a2 2 0 002-2V2a2 2 0 00-2-2h-4a2 2 0 00-2 2v2a2 2 0 002 2z"></path></svg>
-                              <span className="text-sm">Create Tier</span>
-                        </button>
-                           {/* Action 6: Create Campaign */}
-                        <button className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg text-gray-600 hover:bg-orange-100 hover:text-orange-600 transition border border-gray-200">
-                              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-2.485 0-4 1.515-4 4s1.515 4 4 4 4-1.515 4-4-1.515-4-4-4z"></path></svg>
-                              <span className="text-sm">Create Campaign</span>
-                        </button>
+            <div className="space-y-4">
+               {upcomingEvents.map(upcomingEvent => 
+                  <div className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                     <div>
+                     <h4 className="font-medium text-slate-900">{upcomingEvent.name}</h4>
+                     <p className="text-slate-500 text-sm">{upcomingEvent.date}</p>
+                     </div>
+                     <div className="bg-gray-100 px-3 py-1 rounded-md text-right">
+                     <span className="block text-sm font-semibold text-slate-800">{upcomingEvent.count}</span>
+                     <span className="block text-xs text-slate-500">{upcomingEvent.percent}</span>
                      </div>
                   </div>
-
-                  {/* Needs Attention Card */}
-                  <div className="bg-white p-6 rounded-xl border border-gray-200 card-shadow">
-                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-lg font-semibold text-gray-800">Needs Attention</h2>
-                        <a href="#" className="text-sm font-medium text-orange-600 hover:underline flex items-center">
-                              View All Members
-                              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                        </a>
-                     </div>
-                     <p className="text-sm text-gray-500 mb-4">Members with outstanding items</p>
-
-                     <div className="space-y-3">
-                        {/* Item 1: John Anderson (Past Due - Red) */}
-                        <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
-                              <div>
-                                 <p className="font-medium text-red-600">John Anderson</p>
-                                 <p className="text-xs text-gray-500">Payment past due</p>
-                              </div>
-                              <span className="text-xs font-semibold text-red-600">5d</span>
-                        </div>
-                        
-                        {/* Item 2: Sarah Mitchell (Past Due - Red) */}
-                        <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
-                              <div>
-                                 <p className="font-medium text-red-600">Sarah Mitchell</p>
-                                 <p className="text-xs text-gray-500">Payment past due</p>
-                              </div>
-                              <span className="text-xs font-semibold text-red-600">3d</span>
-                        </div>
-                        
-                        {/* Item 3: David Chen (Expiring - Yellow) */}
-                        <div className="flex justify-between items-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                              <div>
-                                 <p className="font-medium text-yellow-700">David Chen</p>
-                                 <p className="text-xs text-gray-500">Membership expiring soon</p>
-                              </div>
-                              <span className="text-xs font-semibold text-yellow-700">7d</span>
-                        </div>
-                     </div>
-                  </div>
-
+               )}
+            </div>
             </div>
 
+            {/* Quick Actions Grid (Takes up 1 column) */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="mb-6">
+               <h3 className="font-semibold text-lg">Quick Actions</h3>
+               <p className="text-slate-500 text-sm">Common tasks and shortcuts</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+               {actions.map(action => 
+                  <button key={action.title} className="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all gap-2 group">
+                  <div className="text-slate-500 group-hover:text-slate-900 transition-colors">
+                  {action.icon}
+                  </div>
+                  <span className="text-xs font-medium text-slate-600 group-hover:text-slate-900">{action.title}</span>
+               </button>
+               )}
+            </div>
+            </div>
          </div>
-      </Fragment>
+
+         <div className="w-full min-w-0">
+         <div className="grid grid-cols-2 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+               <div className="flex justify-between items-center mb-6">
+                  <div>
+                  <h3 className="font-semibold text-lg">Recent Activity</h3>
+                  <p className="text-slate-500 text-sm">Latest updates from your organization</p>
+                  </div>
+                  <button className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900">
+                  View All <ArrowRight size={16} />
+                  </button>
+               </div>
+
+               <div className="space-y-6">
+                  {activityItems.map((item) => (
+                  <div key={item.title} className="flex gap-4">
+                     <div className="mt-1.5">
+                        <div className="w-2 h-2 bg-slate-800 rounded-full"></div>
+                     </div>
+                     <div>
+                        <p className="text-sm text-slate-800 font-medium">{item.title}</p>
+                        <p className="text-xs text-slate-400 mt-1">{item.time}</p>
+                     </div>
+                  </div>
+                  ))}
+               </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+               <div className="flex justify-between items-center mb-6">
+                  <div>
+                  <h3 className="font-semibold text-lg">Needs Attention</h3>
+                  <p className="text-slate-500 text-sm">Members with outstanding items</p>
+                  </div>
+                  <button className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900">
+                  View All Members <ArrowRight size={16} />
+                  </button>
+               </div>
+
+               <div className="space-y-3">
+                  {attentionCards.map((card) => (
+                  <div key={card.name} className="flex items-center justify-between p-4 bg-orange-50 border border-orange-100 rounded-lg">
+                     <div>
+                        <h4 className="font-medium text-slate-900 text-sm">{card.name}</h4>
+                        <p className="text-slate-500 text-xs">{card.issue}</p>
+                     </div>
+                     <div className="bg-white px-2 py-1 rounded border border-orange-100 text-xs font-medium text-slate-600 shadow-sm">
+                        {card.badge}
+                     </div>
+                  </div>
+                  ))}
+               </div>
+            </div>
+         </div>
+         </div>
+      </div>
    );
 }

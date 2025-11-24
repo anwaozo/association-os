@@ -3,7 +3,10 @@ import { useApiClient } from "@/lib/apiClient";
 import { useAuth } from '@/context/AuthContext';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { 
+  Eye, 
+  EyeOff 
+} from 'lucide-react';
 
 export default function LoginPage() {
    const router = useRouter();
@@ -67,7 +70,7 @@ export default function LoginPage() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600"
                   onClick={() => setShowPassword(!showPassword)}
                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  {showPassword ? <EyeOff /> : <Eye />}
                </span>
                {error && <p className="text-red-500 text-sm">{error}</p>}
             </div>

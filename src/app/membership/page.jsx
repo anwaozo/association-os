@@ -7,9 +7,15 @@ import StatsCard from '@/app/components/StatsCard';
 import MembershipAddPage from '@/app/membership/add/page';
 import { useApiClient } from "@/lib/apiClient";
 import { useToast } from "@/app/components/toast/ToastContext";
-import { FaPlus, FaSearch, FaEllipsisH, FaUsers, FaCheckCircle } from 'react-icons/fa';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 import { useSelectedItem } from "@/store/useSelectedItem";
+import { 
+  Search,
+  Plus,
+  CheckCircle,
+  User2,
+  EllipsisIcon
+} from 'lucide-react';
 
 export default function MembershipPage() {
    const api = useApiClient();
@@ -62,7 +68,7 @@ export default function MembershipPage() {
                   href={`membership/${tier.slug}`}
                   onClick={() => setItem(tier)}
                >
-                  <FaEllipsisH className="w-5 h-5" />
+                  <EllipsisIcon className="w-5 h-5" />
                </Link>
             </button>
          </div>
@@ -72,7 +78,7 @@ export default function MembershipPage() {
             <ul className="text-sm text-gray-600 space-y-1">
                {tier.benefits.slice(0, 3).map((benefit, index) => (
                <li key={index} className="flex items-start">
-                  <FaCheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                   {benefit}
                </li>
                ))}
@@ -80,7 +86,7 @@ export default function MembershipPage() {
          </div>
 
          <div className="flex items-center text-sm text-gray-600 mb-6">
-            <FaUsers className="w-4 h-4 mr-2 text-indigo-500" />
+            <User2 className="w-4 h-4 mr-2 text-indigo-500" />
             <span>{tier.activeMembers} active members</span>
          </div>
 
@@ -107,17 +113,17 @@ export default function MembershipPage() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-gray-200 pb-4">
                <h2 className="text-xl font-semibold text-gray-900 mb-4 sm:mb-0">All Tiers</h2>
                <button 
-                  className="flex items-center px-4 py-2 bg-orange-600 rounded-lg text-white font-medium rounded-lg transition shadow-md"
+                  className="flex items-center px-4 py-2 bg-[#FF7A2C] rounded-lg text-white font-medium rounded-lg transition shadow-md"
                   onClick={setIsModalOpen.bind(null, true)}
                >
-                  <FaPlus className="w-5 h-5 mr-2" />
+                  <Plus className="w-5 h-5 mr-2" />
                   Create Tier
                </button>
             </div>
 
             <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-8">
                <div className="relative flex-1">
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                      type="text"
                      placeholder="Search by name"

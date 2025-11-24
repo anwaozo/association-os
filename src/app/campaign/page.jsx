@@ -1,21 +1,45 @@
 'use client';
-import { useState } from 'react';
-import Sidebar from '@/app/components/Sidebar';
+import { useState, useEffect } from 'react';
 import Currency from '@/app/components/Currency';
 import CampaignAddPage from '@/app/campaign/add/page';
 import { FaCalendar, FaClock, FaMapPin, FaDollarSign, FaUsers, FaCheckSquare, FaChevronLeft, FaFacebookMessenger, FaEdit, FaSearch, FaDownload, FaCheckCircle, FaMinusCircle, FaFile, FaEllipsisV, FaChevronDown, FaPlus } from 'react-icons/fa';
-import { FaCircleXmark } from 'react-icons/fa6';
-import ToggleSwitch from '@/app/components/forms/ToggleSwitch';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
+import { Plus } from 'lucide-react';
+import { useApiClient } from "@/lib/apiClient";
+import { useToast } from "@/app/components/toast/ToastContext";
 
 export default function CampaignPage() {
+   const api = useApiClient();
+   const { showToast } = useToast();
+   const [contacts, setContacts] = useState([]);
    const [campaign, setCampaign] = useState([]);
    const [isModalOpen, setIsModalOpen] = useState(false);
 
-   const addNewCampaign = (newCampaign) => {
-      setCampaign(prevCampaign => [newCampaign, ...prevCampaign]);
-      console.log("New Campaign Added:", prevCampaign);
+   const addNewCampaign = async (newCampaign) => {
+      try {
+         const res = await api.post("/campaign", newCampaign);
+         if(res.status === 201) {
+            showToast(`Campaign  added successfully!`);
+            setIsModalOpen(false);
+            const list = await api.get("/campaign");
+            setCampaign(list.data);
+         } else {
+            showToast(res.data.message);
+         }
+      } catch (err) {
+      }
    };
+
+   const fetchCampaigns = async () => {
+      const res = await api.get("/campaign");
+      if (res.data) {
+         setCampaign(res.data);
+      }
+   };
+
+   useEffect(() => {
+      fetchCampaigns();
+   }, []);
 
    const getStatusColor = (status) => {
       if (status === 'Upcoming') return 'text-green-700 bg-green-100';
@@ -23,7 +47,7 @@ export default function CampaignPage() {
       return 'text-gray-700 bg-gray-100';
    };
 
-   const campaigns = [{
+   /*const campaigns = [{
       id: 1,
       name: "General Fund",
       slug: "general-fund",
@@ -47,7 +71,7 @@ export default function CampaignPage() {
       slug: "capital-campaign",
       received: 47800,
       total: 100000,
-   }];
+   }];*/
 
    // --- Event Details Tab Content ---
    const CampaignList = (campaigns) => (
@@ -55,13 +79,13 @@ export default function CampaignPage() {
          
          {/* Campaigns List */}
          <div className="w-full items-center space-y-4 sm:space-y-0 sm:space-x-6 p-4 bg-gray-50">
-            {campaigns.campaigns.map((campaign) => {
-               const percentRaised = ((campaign.received / campaign.total) * 100).toFixed(0);
+            {campaign.map((campaign) => {
+               const percentRaised = ((campaign?.received ? campaign?.received : 0 / campaign.goal) * 100).toFixed(0);
                return (
                   <div key={campaign.id} className="flex-1 w-full mb-5">
                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{campaign.name}</h3>
                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm text-gray-700"><span className="font-bold"><Currency amount={campaign.received} /></span> of <span className="font-bold"><Currency amount={campaign.total} /></span></p>
+                        <p className="text-sm text-gray-700"><span className="font-bold"><Currency amount={campaign?.received ? campaign?.received : 0} /></span> of <span className="font-bold"><Currency amount={campaign.goal} /></span></p>
                         <p className="text-sm font-bold text-indigo-600">{percentRaised}%</p>
                      </div>
                      {/* Progress Bar */}
@@ -106,17 +130,13 @@ export default function CampaignPage() {
                   
                {/* Actions */}
                <div className="flex space-x-3">
-                  <button 
-                     className="flex items-center px-4 py-2 bg-[#FF884D] border border-gray-300 text-white font-medium rounded-xl transition shadow-sm"
-                     onClick={setIsModalOpen.bind(null, true)}
-                  >
-                     <FaPlus className="w-5 h-5 mr-2" />
-                     Create Campaign
+                  <button className="flex items-center gap-2 bg-[#FF7A2C] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" onClick={setIsModalOpen.bind(null, true)}>
+                     <Plus className="mr-2" /> Create Campaign
                   </button>
                </div>
             </div>
 
-            <CampaignList campaigns={campaigns} />
+            <CampaignList campaigns={campaign} />
 
          </div>
          <CampaignAddPage 

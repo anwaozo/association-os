@@ -3,9 +3,8 @@ import Link from 'next/link';
 import { Fragment, useState, useEffect } from 'react';
 import { formatToReadableDate } from '@/app/components/DateTimeFormat';
 import Header from '@/app/components/Header';
-import { FaArrowRight, FaCalendar, FaCreditCard } from 'react-icons/fa';
+import { ArrowRight, Calendar, CreditCard, CircleCheck } from 'lucide-react';
 import { useApiClient } from "@/lib/apiClient";
-import { FaCircleCheck } from 'react-icons/fa6';
 import Currency from '@/app/components/Currency';
 
 const AnnouncementItem = ({ title, content, postDate }) => (
@@ -51,7 +50,7 @@ export default function UserDashboard() {
 
    return (
       <Fragment>
-         <Header title="Good Morning, John" subTitle="Here's what's happening with your membership." />
+         <Header title={`Good Morning, ${dashboard?.name}`} subTitle="Here's what's happening with your membership." />
 
          {/* 2. Dashboard Content Grid */}
          <div className="container mx-auto">
@@ -78,11 +77,11 @@ export default function UserDashboard() {
 
                            <div className="mt-2 pt-6 border-t border-slate-200/50 space-y-3">
                               <div className="flex items-center gap-3 text-sm text-slate-600">
-                                 <FaCalendar size={16} className="text-slate-400" />
+                                 <Calendar size={16} className="text-slate-400" />
                                  <span>Member since {formatToReadableDate(dashboard?.membershipHistory?.startDate)}</span>
                               </div>
                               <div className="flex items-center gap-3 text-sm text-slate-600">
-                                 <FaCreditCard size={16} className="text-slate-400" />
+                                 <CreditCard size={16} className="text-slate-400" />
                                  <span>Next billing: {formatToReadableDate(dashboard?.membershipHistory?.endDate)}</span>
                               </div>
                            </div>
@@ -112,7 +111,7 @@ export default function UserDashboard() {
                   <div className="flex items-center justify-between mb-6">
                      <h3 className="font-medium text-slate-800">My RSVPs</h3>
                      <Link href="/event" className="text-sm text-slate-500 flex items-center hover:text-slate-800 transition-colors">
-                        View All <FaArrowRight size={14} className="ml-1" />
+                        View All <ArrowRight size={14} className="ml-1" />
                      </Link>
                   </div>
 
@@ -125,7 +124,7 @@ export default function UserDashboard() {
                            <p className="text-sm text-slate-500 mt-0.5">{formatToReadableDate(rsvp?.createdAt)}</p>
                         </div>
                         <div className="flex items-center text-xs font-medium text-[#166534] bg-[#dcfce7] px-3 py-1.5 rounded-full">
-                           <FaCircleCheck size={14} className="mr-1.5" /> In Calendar
+                           <CircleCheck size={14} className="mr-1.5" /> In Calendar
                         </div>
                      </div>
                      )) : (

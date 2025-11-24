@@ -1,15 +1,27 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Menu, MenuItem, MenuItems, MenuButton } from "@headlessui/react";
 import Header from '@/app/components/Header';
 import StatsCard from '@/app/components/StatsCard';
 import ContactAddPage from '@/app/contact/add/page';
 import ContactImportPage from '@/app/contact/import/page';
 import { useApiClient } from "@/lib/apiClient";
 import DataTable from '@/app/components/DataTable';
-import { FaEdit, FaEnvelope, FaUserMinus, FaEllipsisV, FaPhoneAlt, FaUserPlus } from 'react-icons/fa';
+
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 import { useToast } from "@/app/components/toast/ToastContext";
+import { 
+  Download,
+  Plus,
+  Upload,
+  MoreVertical,
+  Mail,
+  Phone,
+  Pencil,
+  Send,
+  Trash2,
+  Search,
+  Info
+} from 'lucide-react';
 
 export default function ContactPage() {
    const api = useApiClient();
@@ -18,6 +30,11 @@ export default function ContactPage() {
    const [isModalOpen, setIsModalOpen] = useState(false);
    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
    const [successMessage, setSuccessMessage] = useState(null);
+   const [activeMenuId, setActiveMenuId] = useState(0);
+
+   const toggleMenu = (id) => {
+      setActiveMenuId(activeMenuId === id ? null : id);
+   };
 
    const stats = [
       { title: 'Total Contacts', value: 312, color: 'bg-green-200'},
@@ -46,19 +63,19 @@ export default function ContactPage() {
    const actions = [
       {
          label: "Edit",
-         icon: <FaEdit />,
+         icon: <Pencil />,
          onClick: (row) => alert(`Edit user: ${row.id}`),
          color: 'black',
       },
       {
          label: "Send Mail",
-         icon: <FaEnvelope />,
+         icon: <Send />,
          onClick: (row) => alert(`Send mail to: ${row.id}`),
          color: 'black',
       },
       {
          label: "Deactivate",
-         icon: <FaUserMinus />,
+         icon: <Trash2 />,
          onClick: (row) => alert(`Deactivate user: ${row.id}`),
          color: 'red',
       },
@@ -91,7 +108,6 @@ export default function ContactPage() {
             setContacts(res.data);
          }
       };
-
       fetchContacts();
    }, []);
 
@@ -102,16 +118,18 @@ export default function ContactPage() {
       const newContact = {
          name: `${contactData.firstName} ${contactData.lastName}`,
          email: contactData.email,
-         phone: contactData.phone || 'N/A',
+         phone: contactData.phone,
          role: contactData.status
       };
 
       try {
          const res = await api.post("/auth/register", newContact);
-         showToast(`Contact ${newContact.name} added successfully!`);
-         setIsModalOpen(false);
-         const list = await api.get("/contacts");
-         setContacts(list.data);
+         if(res.status === 200) {
+            showToast(`Contact ${newContact.name} added successfully!`);
+            setIsModalOpen(false);
+            const list = await api.get("/contacts");
+            setContacts(list.data);
+         } 
       } catch (err) {
       }
    };
@@ -163,22 +181,26 @@ export default function ContactPage() {
                   <p className="text-gray-400 mb-4 md:mb-0">View and manage all contacts and members</p>
                </div>
 
-               <div className="flex items-center space-x-3">
-                  <button className="flex items-center px-4 py-2 bg-[#FF7A2C] rounded-lg text-white font-medium rounded-lg transition shadow-md" onClick={openContactAddModal}>
-                     <FaUserPlus className="mr-2" /> Add Contact
+               <div className="flex gap-3">
+                  <button className="flex items-center gap-2 bg-[#FF7A2C] hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" onClick={openContactAddModal}>
+                     <Plus className="mr-2" /> Add Contact
                   </button>
                      
-                  <button className="flex items-center px-4 py-2 bg-white border border-gray-600 rounded-lg text-black font-medium" onClick={openContactImportModal}>
-                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                  <button className="flex items-center gap-2 border border-gray-300 text-slate-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors" onClick={openContactImportModal}>
+                     <Upload />
                      Import CSV
                   </button>
                </div>
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-center mt-10 mb-6 gap-4">
-               <div className="relative flex-grow w-full md:max-w-3xl">
-                  <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                  <input type="text" placeholder="Search by name, number or email..." className="w-full pl-10 pr-4 py-2 bg-white border border-gray-600 rounded-lg text-black placeholder-gray-400 focus:ring-orange-500 focus:border-orange-500" />
+               <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input 
+                     type="text" 
+                     placeholder="Search by name, number or email..." 
+                     className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 border-none rounded-md text-sm focus:ring-2 focus:ring-gray-200 outline-none placeholder-gray-400"
+                  />
                </div>
 
                <div className="flex items-center space-x-3 w-full md:w-auto">
@@ -187,8 +209,8 @@ export default function ContactPage() {
                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                   </button>
                      
-                  <button className="flex items-center px-4 py-2 bg-white border border-gray-600 rounded-lg text-black">
-                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Download
+                  <button className="flex items-center gap-2 border border-gray-300 text-slate-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
+                     <Download size={16} />Download
                   </button>
                </div>
             </div>
@@ -197,6 +219,7 @@ export default function ContactPage() {
                <table className="min-w-full border border-gray-200 rounded-lg">
                   <thead className="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
                      <tr>
+                        <th className="p-4 w-10"><input type="checkbox" className="rounded border-gray-300" /></th>
                         <th className="px-6 py-3 text-left">Name</th>
                         <th className="px-6 py-3 text-left">Contact</th>
                         <th className="px-6 py-3 text-left">Status</th>
@@ -209,15 +232,18 @@ export default function ContactPage() {
                   <tbody className="divide-y divide-gray-100 text-sm text-gray-800">
                      {contacts.map(contact => (
                      <tr key={contact.id} className="hover:bg-gray-50">
+                        <td className="p-4"><input type="checkbox" className="rounded border-gray-300" /></td>
                         <td className="px-6 py-4 font-medium">{contact.name}</td>
                         <td className="px-6 py-4">
-                           <div className="flex items-center gap-1">
-                              <FaEnvelope className="text-gray-500" />
-                              <span>{contact.email}</span>
-                           </div>
-                           <div className="flex items-center gap-1 text-gray-600">
-                              <FaPhoneAlt className="text-gray-500" />
-                              <span>{contact.phone}</span>
+                           <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2 text-slate-600">
+                                 <Mail size={14} className="text-slate-400" /> {contact.email}
+                              </div>
+                              {contact.phone && (
+                                 <div className="flex items-center gap-2 text-slate-500">
+                                    <Phone size={14} className="text-slate-400" /> {contact.phone}
+                                 </div>
+                              )}
                            </div>
                         </td>
                         <td className="px-6 py-4">
@@ -225,34 +251,30 @@ export default function ContactPage() {
                               {contact.role === 2 ? 'Member': 'Contact'}
                            </span>
                         </td>
-                        <td className="px-6 py-4">{contact.membershipId}</td>
+                        <td className="px-6 py-4">{contact.membershipId ? contact?.membership?.name: ''}</td>
                         <td className="px-6 py-4">{formatToReadableDate(contact.createdAt)}</td>
-                        <td className="px-6 py-4 text-right">
-                           <Menu as="div" className="relative inline-block text-left">
-                              <MenuButton className="p-2 rounded hover:bg-gray-100">
-                                 <FaEllipsisV className="w-5 h-5 text-gray-600" />
-                              </MenuButton>
+                        <td className="px-6 py-4 text-right relative">
+                           <button 
+                              onClick={() => toggleMenu(contact.id)}
+                              className="p-1 rounded hover:bg-gray-200 text-slate-400 hover:text-slate-600"
+                           >
+                              <MoreVertical size={18} />
+                           </button>
 
-                              <MenuItems className="absolute right-0 mt-2 w-36 origin-top-right bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                                 <div className="py-1">
-                                 {actions.map((action, i) => (
-                                    <MenuItem key={i}>
-                                       {({ active }) => (
-                                       <button
-                                          onClick={() => action.onClick(row)}
-                                          className={`flex items-center gap-2 w-full px-4 py-2 text-sm ${
-                                             active ? "bg-gray-50" : ""
-                                          } ${action.color === "red" ? "text-red-600" : "text-gray-700"}`}
-                                       >
-                                          {action.icon && <span>{action.icon}</span>}
-                                          <span>{action.label}</span>
-                                       </button>
-                                       )}
-                                    </MenuItem>
-                                 ))}
-                                 </div>
-                              </MenuItems>
-                           </Menu>
+                           {activeMenuId === contact.id && (
+                              <div className="absolute right-12 top-8 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-10 py-1">
+                                 <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
+                                    <Pencil size={14} /> Edit
+                                 </button>
+                                 <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
+                                    <Send size={14} /> Invite Contact
+                                 </button>
+                                 <div className="h-px bg-gray-100 my-1"></div>
+                                 <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3">
+                                    <Trash2 size={14} /> Delete Contact
+                                 </button>
+                              </div>
+                           )}
                         </td>
                      </tr>
                      ))}

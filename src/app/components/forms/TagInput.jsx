@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-export default function TagInput({ placeholder = "Type and press Enter..." }) {
+export default function TagInput({ name, placeholder = "Type and press Enter..." }) {
    const [tags, setTags] = useState([]);
    const [inputValue, setInputValue] = useState("");
 
@@ -28,6 +28,7 @@ export default function TagInput({ placeholder = "Type and press Enter..." }) {
 
    return (
       <div className="border border-gray-200 rounded-lg w-full p-3 flex flex-wrap gap-2 focus:border-orange-500 focus:ring-blue-400">
+         <input type="hidden" name={name} value={JSON.stringify(tags)} />
          {tags.map((tag, index) => (
          <span
             key={index}

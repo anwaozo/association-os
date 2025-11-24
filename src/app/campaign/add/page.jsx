@@ -8,9 +8,7 @@ import ToggleSwitch from '@/app/components/forms/ToggleSwitch';
 export default function CampaignAddPage({ isOpen, onClose, onSave }) {
    if (!isOpen) return null;
    const [errors, setErrors] = useState({});
-    
-   // Controlled state for toggles
-   const [enableRSVP, setEnableRSVP] = useState(true);
+   const [isCustomAmount, setIsCustomAmount] = useState(true);
    const [isPublic, setIsPublic] = useState(false);
    const [isAnonymous, setIsAnonymous] = useState(false);
    const [isEmailNotifiy, setIsEmailNotifiy] = useState(false);
@@ -18,26 +16,15 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
 
    const validateForm = (data) => {
       let newErrors = {};
-      const emailRegex = /\S+@\S+\.\S+/;
-      const phoneRegex = /^[6-9][0-9]{9}$/;
 
-      if (!data.title || !data.title.trim()) {
-         newErrors.title = 'Title is required.';
+      if (!data.name || !data.name.trim()) {
+         newErrors.title = 'Name is required.';
       }
-      if (!data.date || !data.date.trim()) {
-         newErrors.date = 'Date is required.';
-      }
-      if (!data.timeFrom || !data.timeFrom.trim()) {
-         newErrors.timeFrom = 'Time From is required.';
-      }
-      if (!data.timeTo || !data.timeTo.trim()) {
-         newErrors.timeTo = 'Time To is required.';
-      }
-      if (!data.location || !data.location.trim()) {
-         newErrors.location = 'Location is required.';
+      if (!data.goal || !data.goal.trim()) {
+         newErrors.date = 'Goal amount is required.';
       }
       if (!data.capacity || !data.capacity.trim()) {
-         newErrors.capacity = 'Capacity is required.';
+         newErrors.timeFrom = 'Capacity is required.';
       }
 
       setErrors(newErrors);
@@ -49,6 +36,12 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
       const formData = new FormData(e.target);
       const campaignData = Object.fromEntries(formData.entries());
       if (validateForm(campaignData)) {
+         formData.append("donation_amount", JSON.stringify(campaignData.donation_amount));
+         campaignData.isCustomAmount = isCustomAmount;
+         campaignData.isPublic = isPublic;
+         campaignData.isAnonymous = isAnonymous;
+         campaignData.isEmailNotifiy = isEmailNotifiy;
+         campaignData.isRecurring = isRecurring;
          onSave(campaignData); 
          e.target.reset();
       }
@@ -56,18 +49,12 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
 
    return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-         {/* Changed bg-gray-900 to bg-white, shadow-2xl, border-gray-800 to border-gray-200, ring-1 ring-gray-200 added for definition */}
          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl p-6 md:p-8 transform transition-all duration-300 scale-100 opacity-100 border border-gray-200">
-               
-               {/* Header: Changed border-gray-700 to border-gray-200 */}
                <div className="flex justify-between items-start border-b border-gray-200 pb-4 mb-6">
                   <div>
-                     {/* Changed text-white to text-gray-900 */}
                      <h2 className="text-2xl font-bold text-gray-900">Create New Campaign</h2>
-                     {/* Changed text-gray-400 to text-gray-600 */}
                      <p className="text-gray-600 text-sm mt-1">Launch a new fundraising initiative for your organization</p>
                   </div>
-                  {/* Changed text-gray-400 to text-gray-600, hover:bg-gray-800 to hover:bg-gray-100 */}
                   <button onClick={onClose} className="text-gray-600 hover:text-gray-900 transition p-1 rounded-full hover:bg-gray-100">
                      <FaCircleXmark className="w-6 h-6" />
                   </button>
@@ -97,7 +84,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                         />
                         <InputField
                            label="End Date"
-                           name="end_date"
+                           name="date"
                            type="date"
                            placeholder=""
                            error={errors?.end_date}
@@ -105,16 +92,8 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                         />
                      </div>
 
-                     <InputField
-                        label="Suggested Donation Amounts"
-                        name="donation_amounts"
-                        type="text"
-                        placeholder=""
-                        error={errors?.donation_amounts}
-                        onFocus={() => setErrors(prev => ({ ...prev, donation_amounts: null }))}
-                     />
-
-                     <TagInput placeholder="Add a tag and press Enter" />
+                     <label>Suggested Donation Amounts</label>
+                     <TagInput name="donation_amount" placeholder="Add a tag and press Enter" />
 
                      <div className="grid grid-cols-2 gap-4">
                         <InputField
@@ -149,8 +128,8 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                      <ToggleSwitch
                         label="Allow Custom Amount"
                         description="Let donors enter their own amount"
-                        enabled={enableRSVP}
-                        setEnabled={setEnableRSVP}
+                        enabled={isCustomAmount}
+                        setEnabled={setIsCustomAmount}
                      />
                      <ToggleSwitch
                         label="Make Campaign Public"
@@ -182,7 +161,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
 
                      <InputField
                         label="Thank You Message"
-                        name="thank_you_message"
+                        name="thank_you"
                         type="textarea"
                         placeholder="Describe the purpose and impact of this campaign..."
                         error={errors?.thank_you_message}

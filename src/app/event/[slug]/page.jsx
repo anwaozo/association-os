@@ -1,9 +1,20 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import Sidebar from '@/app/components/Sidebar';
-import { FaCalendar, FaClock, FaMapPin, FaDollarSign, FaUsers, FaCheckSquare, FaChevronLeft, FaFacebookMessenger, FaEdit, FaSearch, FaDownload, FaCheckCircle, FaMinusCircle, FaFile, FaEllipsisV, FaChevronDown } from 'react-icons/fa';
-import { FaCircleXmark } from 'react-icons/fa6';
+import { useRouter } from 'next/navigation';
+import { 
+   Search,
+  Info,
+  NotepadText,
+  CalendarDays,
+  Clock,
+  MapPin,
+  Send,
+  SquarePen,
+  UsersIcon,
+  ChevronLeft,
+  Settings2,
+  FileDown
+} from 'lucide-react';
 import ToggleSwitch from '@/app/components/forms/ToggleSwitch';
 import { useSelectedItem } from "@/store/useSelectedItem";
 import { formatToReadableDate, formatToTime, getEventStatus} from '@/app/components/DateTimeFormat';
@@ -11,6 +22,7 @@ import { formatToReadableDate, formatToTime, getEventStatus} from '@/app/compone
 export default function EventDetailPage({ params }) {
    const [isOpen, setIsOpen] = useState(true);
    const { item, clearItem } = useSelectedItem();
+   const router = useRouter();
    if (!params) {
       return <div>Loading or Event not found...</div>;
    }
@@ -261,125 +273,90 @@ export default function EventDetailPage({ params }) {
 
       return (
          <div className="mt-8 bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200">
+            <div className="mb-6">
+               <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-bold text-gray-900">All RSVPs</h3>
+                  <button className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-800 font-medium rounded-xl hover:bg-gray-100 transition shadow-sm">
+                        <FileDown className="w-5 h-5 mr-2" />
+                        Download List
+                  </button>
+               </div>
+               <p className="text-sm text-gray-600 mb-4">
+                  <span className="font-semibold text-gray-900">{filteredRsvps.length}</span> Members / <span className="font-semibold text-gray-900">{totalGuests?totalGuests:0}</span> Guests
+               </p>
                
-               {/* Header and Search/Filter Bar */}
-               <div className="mb-6">
-                  <div className="flex justify-between items-center mb-4">
-                     <h3 className="text-xl font-bold text-gray-900">All RSVPs</h3>
-                     <button className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-800 font-medium rounded-xl hover:bg-gray-100 transition shadow-sm">
-                           <FaDownload className="w-5 h-5 mr-2" />
-                           Download List
-                     </button>
+               <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4">
+                  <div className="relative flex-1">
+                     <input
+                        type="text"
+                        placeholder="Search by name, tickets, or email"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-transparent transition shadow-inner"
+                     />
+                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   </div>
-                  <p className="text-sm text-gray-600 mb-4">
-                     <span className="font-semibold text-gray-900">{filteredRsvps.length}</span> Members / <span className="font-semibold text-gray-900">{totalGuests}</span> Guests
-                  </p>
                   
-                  <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4">
-                     {/* Search Bar */}
-                     <div className="relative flex-1">
-                           <input
-                              type="text"
-                              placeholder="Search by name, tickets, or email"
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-transparent transition shadow-inner"
-                           />
-                           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                     </div>
-                     
-                     {/* Tier Filter */}
-                     <select
-                           value={filterTier}
-                           onChange={(e) => setFilterTier(e.target.value)}
-                           className="w-full md:w-48 p-3 bg-white border border-gray-300 rounded-xl text-gray-900 appearance-none cursor-pointer focus:border-transparent transition shadow-sm"
-                     >
-                           {uniqueTiers.map(tier => (
-                              <option key={tier} value={tier}>{tier}</option>
-                           ))}
-                     </select>
-                  </div>
+                  <select
+                     value={filterTier}
+                     onChange={(e) => setFilterTier(e.target.value)}
+                     className="w-full md:w-48 p-3 bg-white border border-gray-300 rounded-xl text-gray-900 appearance-none cursor-pointer focus:border-transparent transition shadow-sm"
+                  >
+                     {uniqueTiers.map(tier => (
+                        <option key={tier} value={tier}>{tier}</option>
+                     ))}
+                  </select>
                </div>
-               
-               {/* RSVP Table */}
-               <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                     <thead className="bg-gray-50">
-                           <tr>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                 Name
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                 Status
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                 Tier
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                 Tickets
-                              </th>
-                              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                 RSVP Date
-                              </th>
-                              <th scope="col" className="relative px-6 py-3">
-                                 <span className="sr-only">Actions</span>
-                              </th>
-                           </tr>
-                     </thead>
-                     <tbody className="bg-white divide-y divide-gray-100">
-                           {filteredRsvps.length > 0 ? (
-                              filteredRsvps.map(rsvp => (
-                                 <RsvpRow key={rsvp.id} rsvp={rsvp} />
-                              ))
-                           ) : (
-                              <tr>
-                                 <td colSpan="6" className="px-6 py-10 text-center text-gray-500">
-                                       No RSVPs match your current filters.
-                                 </td>
-                              </tr>
-                           )}
-                     </tbody>
-                  </table>
-               </div>
-
+            </div>
+            
+            {/* RSVP Table */}
+            <div className="overflow-x-auto">
+               <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                     <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                           Name
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                           Status
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                           Tier
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                           Tickets
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                           RSVP Date
+                        </th>
+                        <th scope="col" className="relative px-6 py-3">
+                           <span className="sr-only">Actions</span>
+                        </th>
+                     </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                     {filteredRsvps.length > 0 ? (
+                        filteredRsvps.map(rsvp => (
+                           <RsvpRow key={rsvp.id} rsvp={rsvp} />
+                        ))
+                     ) : (
+                        <tr>
+                           <td colSpan="6" className="px-6 py-10 text-center text-gray-500">
+                              No RSVPs match your current filters.
+                           </td>
+                        </tr>
+                     )}
+                  </tbody>
+               </table>
+            </div>
          </div>
       );
    };
 
-   const event = {
-      id: 1,
-      name: "Annual Gala Dinner",
-      slug: "annual-gala-dinner",
-      date: "Oct 15, 2025",
-      time: "7:00 - 9:00",
-      location: "Grand Hall",
-      description: "Join us for our annual celebration with distinguished guests and members.",
-      status: "Upcoming",
-      attendance: 85,
-      capacity: 100,
-      cost: 0,
-      rsvp: 127,
-      rsvps: [
-         { id: 101, name: "John Doe", email: "john@example.com", status: "Confirmed", tier: "Professional", tickets: 2, rsvpDate: "Oct 1, 2025" },
-         { id: 102, name: "Sarah Johnson", email: "sarah@example.com", status: "Confirmed", tier: "Patron", tickets: 1, rsvpDate: "Oct 2, 2025" },
-         { id: 103, name: "Michael Chen", email: "michael@example.com", status: "Confirmed", tier: "Professional", tickets: 2, rsvpDate: "Oct 2, 2025" },
-         { id: 104, name: "Emily Rodriguez", email: "emily@example.com", status: "Confirmed", tier: "Student", tickets: 3, rsvpDate: "Oct 2, 2025" },
-         { id: 105, name: "David Wilson", email: "david@example.com", status: "Confirmed", tier: "Professional", tickets: 2, rsvpDate: "Oct 5, 2025" },
-         { id: 106, name: "Jennifer Lee", email: "jennifer@example.com", status: "Pending", tier: "Alumni", tickets: 1, rsvpDate: "Oct 6, 2025" },
-         { id: 107, name: "Robert Taylor", email: "robert@example.com", status: "Canceled", tier: "Patron", tickets: 2, rsvpDate: "Oct 7, 2025" },
-         { id: 108, name: "Lisa Anderson", email: "lisa@example.com", status: "Confirmed", tier: "Student", tickets: 1, rsvpDate: "Oct 8, 2025" },
-         { id: 109, name: "Chris Evans", email: "chris@example.com", status: "Pending", tier: "Professional", tickets: 2, rsvpDate: "Oct 9, 2025" },
-         { id: 110, name: "Maria Garcia", email: "maria@example.com", status: "Confirmed", tier: "Alumni", tickets: 1, rsvpDate: "Oct 10, 2025" },
-         { id: 111, name: "Kevin Smith", email: "kevin@example.com", status: "Waitlist", tier: "Student", tickets: 1, rsvpDate: "Oct 11, 2025" },
-         { id: 112, name: "Jessica Brown", email: "jessica@example.com", status: "Confirmed", tier: "Patron", tickets: 2, rsvpDate: "Oct 12, 2025" },
-         { id: 113, name: "Tom Holland", email: "tom@example.com", status: "Confirmed", tier: "Professional", tickets: 1, rsvpDate: "Oct 13, 2025" },
-      ],
-   };
-
    // Calculate attendance percentage, safely handling division by zero
-   const filledPercent = item.capacity > 0 ? ((item.rsvps.length / item.capacity) * 100).toFixed(0) : 0;
+   const filledPercent = item?.capacity > 0 ? ((item?.rsvps.length / item?.capacity) * 100).toFixed(0) : 0;
 
-   const TabButton = ({ id, label, count }) => (
+   const TabButton = ({ id, label, icon, count }) => (
       <button
          onClick={() => setActiveTab(id)}
          className={`
@@ -390,6 +367,7 @@ export default function EventDetailPage({ params }) {
             }
          `}
       >
+         {icon}
          <span>{label}</span>
          {count !== undefined && (
             <span className="ml-1 px-2 py-0.5 text-xs font-bold rounded-full bg-gray-200 text-gray-700">
@@ -416,67 +394,49 @@ export default function EventDetailPage({ params }) {
 
    // --- Event Details Tab Content ---
    const EventDetailsTab = () => (
-      <div className="mt-8 bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200">
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-8 text-gray-700 mb-8 pb-8 border-b border-gray-100">
-            <div className="flex items-start space-x-3">
-               <FaCalendar className="w-5 h-5 text-[#FF884D] flex-shrink-0 mt-0.5" />
-               <div>
-                  <p className="font-semibold text-sm text-gray-500">Date</p>
-                  <p className="text-gray-900 font-medium">{formatToReadableDate(item.date)}</p>
-               </div>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+         <div className="space-y-4 mb-10">
+            <div className="flex items-center gap-3 text-gray-700">
+               <CalendarDays size={20} className="text-gray-400" />
+               <span>{formatToReadableDate(item?.date)}</span>
             </div>
-            <div className="flex items-start space-x-3">
-               <FaClock className="w-5 h-5 text-[#FF884D] flex-shrink-0 mt-0.5" />
-               <div>
-                  <p className="font-semibold text-sm text-gray-500">Time</p>
-                  <p className="text-gray-900 font-medium">{formatToTime(item.start_time)} - {formatToTime(item.end_time)}</p>
-               </div>
+            <div className="flex items-center gap-3 text-gray-700">
+               <Clock size={20} className="text-gray-400" />
+               <span>{formatToTime(item?.start_time)} - {formatToTime(item?.end_time)}</span>
             </div>
-            <div className="flex items-start space-x-3">
-               <FaMapPin className="w-5 h-5 text-[#FF884D] flex-shrink-0 mt-0.5" />
-               <div>
-                  <p className="font-semibold text-sm text-gray-500">Location / Link</p>
-                  <p className="text-gray-900 font-medium">{item.location}</p>
-               </div>
+            <div className="flex items-center gap-3 text-gray-700">
+               <MapPin size={20} className="text-gray-400" />
+               <span>{item?.location}</span>
             </div>
          </div>
-
-         <div className="mb-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-3">About the Event</h3>
-            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{item.description}</p>
+         <div className="mb-10">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">About the event</h3>
+            {item?.description}
          </div>
-         
-         <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <div className="flex-1 w-full">
-               <div className="flex justify-between items-center mb-2">
-                  <p className="text-sm font-semibold text-gray-700">Event Capacity</p>
-                  <p className="text-sm font-bold text-green-600">{filledPercent}% filled</p>
-               </div>
-               <div className="w-full bg-gray-200 rounded-full h-2.5">
+         <div>
+            <div className="flex items-center justify-between mb-4">
+               <h3 className="text-lg font-semibold text-gray-900">Event Capacity</h3>
+               <span className="text-sm text-gray-500 font-medium">{filledPercent}% filled</span>
+            </div>
+            
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+               <div className="flex-1 w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                   <div 
-                     className="h-2.5 rounded-full bg-green-500 transition-all duration-500" 
+                     className="bg-primary-green h-full rounded-full" 
                      style={{ width: `${filledPercent}%` }}
                   ></div>
                </div>
-            </div>
-            
-            <div className="flex items-center space-x-2 p-3 bg-white rounded-xl shadow-md border border-gray-300">
-               <FaUsers className="w-6 h-6 text-[#FF884D]" />
-               <div>
-                  <p className="text-lg font-bold text-gray-900 leading-none">{item.rsvps.length}/{item.capacity}</p>
-                  <p className="text-xs text-gray-500 leading-none">RSVPs</p>
+               
+               <div className="bg-gray-50 rounded-xl p-4 flex items-center gap-4 min-w-[180px] shadow-sm border border-gray-100">
+                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                     <UsersIcon size={20} />
+                  </div>
+                  <div>
+                     <p className="text-xs text-gray-500 font-medium uppercase">RSVPs</p>
+                     <p className="text-xl font-bold text-gray-900">{item?._count?.rsvps}/{item?.capacity}</p>
+                  </div>
                </div>
             </div>
-         </div>
-         
-         <div className="mt-6 space-y-3">
-            {item.price > 0 && (
-               <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl border border-blue-200 text-blue-800">
-                  <FaDollarSign className="w-5 h-5 text-blue-600" />
-                  <span className="font-semibold">Price:</span>
-                  <span className="font-bold">${item.price.toFixed(2)} per person</span>
-               </div>
-            )}
          </div>
       </div>
    );
@@ -502,29 +462,29 @@ export default function EventDetailPage({ params }) {
       <div className="space-y-6">
          <nav className="flex items-center space-x-2 text-sm text-gray-500 font-medium">
             <button onClick={onBack} className="flex items-center hover:text-[#FF884D] transition">
-               <FaChevronLeft className="w-4 h-4 mr-0.5" />
+               <ChevronLeft className="w-4 h-4 mr-0.5" />
                Events
             </button>
             <span>/</span>
-            <span className="text-gray-900 font-bold truncate max-w-xs">{item.title}</span>
+            <span className="text-gray-900 font-bold truncate max-w-xs">{item?.title}</span>
          </nav>
 
          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6">
             <div className="flex flex-wrap items-center space-x-4 mb-4 sm:mb-0">
-               <h1 className="text-3xl font-bold text-gray-900">{item.title}</h1>
-               <div className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(item.date)}`}>
-                  {getEventStatus(item.date)}
+               <h1 className="text-3xl font-bold text-gray-900">{item?.title}</h1>
+               <div className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(item?.date)}`}>
+                  {getEventStatus(item?.date)}
                </div>
             </div>
                
             {/* Actions */}
             <div className="flex space-x-3">
-               <button className="flex items-center px-4 py-2 bg-[#FF884D] border border-gray-300 text-white font-medium rounded-xl transition shadow-sm">
-                  <FaFacebookMessenger className="w-5 h-5 mr-2" />
+               <button className="flex items-center gap-2 px-4 py-2 bg-[#FF7A2C] text-white rounded-lg hover:bg-orange-600 transition-colors font-medium shadow-sm">
+                  <Send className="w-5 h-5 mr-2" />
                   Send Announcement
                </button>
-               <button className="flex items-center px-4 py-2 bg-white text-gray-800 font-medium rounded-xl shadow-md transition">
-                  <FaEdit className="w-5 h-5 mr-2" />
+               <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm">
+                  <SquarePen className="w-5 h-5 mr-2" />
                   Edit Event
                </button>
             </div>
@@ -532,9 +492,9 @@ export default function EventDetailPage({ params }) {
          
          {/* Tabs Navigation */}
          <div className="flex border-b border-gray-200 -mb-px">
-            <TabButton id="details" label="Event Details" />
-            <TabButton id="rsvps" label="RSVPs" count={item.attendance} />
-            <TabButton id="settings" label="Settings" />
+            <TabButton id="details" label="Event Details" icon={<Info size={18} />} />
+            <TabButton id="rsvps" label="RSVPs" icon={<NotepadText size={18} />} count={item?.attendance} />
+            <TabButton id="settings" label="Settings" icon={<Settings2 size={18}/>} />
          </div>
 
          {/* Tab Content */}
