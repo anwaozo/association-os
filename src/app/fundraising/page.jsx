@@ -13,31 +13,28 @@ export default function FundraisingPage() {
    const StatTile = ({ title, value, timePeriod, icon: Icon, linkText }) => (
       <div className="p-5 bg-white rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between">
          <div className="flex justify-between items-start mb-3">
-               <p className="text-sm font-semibold text-gray-500">{title}</p>
-               {/* Dropdown for Total Raised */}
-               {timePeriod && (
-                  <select className="bg-gray-100 text-gray-700 border border-gray-300 rounded-lg py-1 px-3 text-sm cursor-pointer focus:ring-indigo-500 focus:border-indigo-500 transition-colors appearance-none">
-                     <option>{timePeriod}</option>
-                     <option>Last 30 Days</option>
-                     <option>Year to Date</option>
-                  </select>
-               )}
-               {/* Icon for Recurring contributions */}
-               {Icon && Icon}
+            <p className="text-sm font-semibold text-black">{title}</p>
+            {timePeriod && (
+               <select className="bg-gray-100 text-black border border-gray-300 rounded-lg py-1 px-3 text-sm cursor-pointer focus:ring-indigo-500 focus:border-indigo-500 transition-colors appearance-none">
+                  <option>{timePeriod}</option>
+                  <option>Last 30 Days</option>
+                  <option>Year to Date</option>
+               </select>
+            )}
+            {Icon && Icon}
+
+            {linkText && (
+               <Link href={'/campaign'}>
+               <span className="flex items-center text-sm font-medium text-block-600 cursor-pointer hover:text-indigo-700">
+                  {linkText} <FaArrowRight className="w-4 h-4 ml-1" />
+               </span>
+               </Link>
+            )}
          </div>
          <div className="flex items-end justify-between">
-               {/* Value display, applying currency formatting if appropriate */}
-               <p className="text-3xl font-bold text-gray-900">
-                  {title === "Total Raised" ? <Currency amount={value} /> : value.toLocaleString()}
-               </p>
-               {/* Link for Active Campaigns */}
-               {linkText && (
-                  <Link href={'/campaign'}>
-                  <span className="flex items-center text-sm font-medium text-indigo-600 cursor-pointer hover:text-indigo-700">
-                     {linkText} <FaArrowRight className="w-4 h-4 ml-1" />
-                  </span>
-                  </Link>
-               )}
+            <p className="text-3xl font-bold text-black-900">
+               {title === "Total Raised" ? <Currency amount={value} /> : value.toLocaleString()}
+            </p>
          </div>
       </div>
    );
@@ -64,14 +61,12 @@ export default function FundraisingPage() {
          <Header title="Fundraising" subTitle="Configure membership levels and pricing" />
 
          {/* Top Section: Chart and Stats */}
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Fundraising Performance Chart (takes 2/3 width on large screens) */}
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
             <div className="lg:col-span-2">
-               <PerformanceChart />
+               <PerformanceChart class="h-full" />
             </div>
 
-            {/* Stats Tiles (takes 1/3 width on large screens, stacked vertically) */}
-            <div className="lg:col-span-1 space-y-6">
+            <div className="lg:col-span-1 space-y-6 h-full">
                {statDatas.map((stat, index) => (
                   <StatTile key={index} {...stat} />
                ))}

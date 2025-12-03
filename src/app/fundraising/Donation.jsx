@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Currency from '@/app/components/Currency';
-import { FaDownload, FaSearch } from 'react-icons/fa';
+import { Search, Upload } from 'lucide-react';
 
 export default function DonationsTable ({ data }) {
     const [searchTerm, setSearchTerm] = useState('');
@@ -27,8 +27,8 @@ export default function DonationsTable ({ data }) {
         <div className="bg-white rounded-xl p-6 shadow-xl border border-gray-100 mt-8">
             <div className="mb-6 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-gray-900">Recent Donations</h2>
-                <button className="flex items-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm">
-                    <FaDownload className="w-4 h-4 mr-2" />
+                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm">
+                    <Upload className="w-4 h-4 mr-2" />
                     Import CSV
                 </button>
             </div>
@@ -37,7 +37,7 @@ export default function DonationsTable ({ data }) {
                 {/* Search Input */}
                 <div className="relative flex-1">
                     {/* Search icon - This is where the ReferenceError was */}
-                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                         type="text"
                         placeholder="Search by name, email, campaign, amount"

@@ -182,12 +182,12 @@ export default function ContactPage() {
                </div>
 
                <div className="flex gap-3">
-                  <button className="flex items-center gap-2 bg-[#FF7A2C] hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" onClick={openContactAddModal}>
-                     <Plus className="mr-2" /> Add Contact
+                  <button className="flex items-center gap-2 bg-[#FF7A2C] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" onClick={openContactAddModal}>
+                     <Plus className="mr-1" /> Add Contact
                   </button>
                      
                   <button className="flex items-center gap-2 border border-gray-300 text-slate-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors" onClick={openContactImportModal}>
-                     <Upload />
+                     <Upload className="mr-1" />
                      Import CSV
                   </button>
                </div>
@@ -215,6 +215,7 @@ export default function ContactPage() {
                </div>
             </div>
 
+            {contacts.length > 0 ? (
             <div className="overflow-x-auto">
                <table className="min-w-full border border-gray-200 rounded-lg">
                   <thead className="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
@@ -281,6 +282,12 @@ export default function ContactPage() {
                   </tbody>
                </table>
             </div>
+            ) : (
+               <div className="text-center p-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                  <p className="text-lg font-medium text-gray-700">No contacts match your current filters.</p>
+                  <p className="text-sm text-gray-500 mt-1">Try adjusting the search term or status filter.</p>
+               </div>
+            )}
          </div>
 
          {/* <DataTable name="All Contacts" columns={columns} data={data} actions={actions} /> */}

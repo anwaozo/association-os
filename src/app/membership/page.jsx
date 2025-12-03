@@ -141,12 +141,19 @@ export default function MembershipPage() {
             </div>
 
             {/* Tier Cards Grid */}
+            {membership.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                {membership.filter(tier =>
                   tier.name.toLowerCase().includes(searchTerm.toLowerCase())).map((tier) => (
                   <TierCard key={tier.id} tier={tier} />
                ))}
             </div>
+            ) : (
+               <div className="text-center p-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                  <p className="text-lg font-medium text-gray-700">No membership match your current filters.</p>
+                  <p className="text-sm text-gray-500 mt-1">Try adjusting the search term or status filter.</p>
+               </div>
+            )}
          </div>
          <MembershipAddPage 
             isOpen={isModalOpen}

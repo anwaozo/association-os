@@ -1,7 +1,6 @@
 import {useState} from 'react';
 import ToggleSwitch from '@/app/components/forms/ToggleSwitch';
 
-
 export default function Payment() {
 
    const [isRenewal, setIsRenewal] = useState(false);
@@ -73,7 +72,7 @@ export default function Payment() {
             <button className="text-red-600 hover:text-red-800 font-medium p-2">
                Disconnect Stripe
             </button>
-            <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-colors">
+            <button className="bg-[#FF7A2C] text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors">
                Save Changes
             </button>
          </div>

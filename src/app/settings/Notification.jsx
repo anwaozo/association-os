@@ -3,6 +3,7 @@ import ToggleSwitch from '@/app/components/forms/ToggleSwitch';
 import InputField from '@/app/components/forms/InputField';
 import { FaEnvelope } from 'react-icons/fa';
 import { FaMessage } from 'react-icons/fa6';
+import { Mail} from 'lucide-react';
 
 export default function Notification() {
 
@@ -12,7 +13,7 @@ export default function Notification() {
       <div className="space-y-8">
          <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
             <div className="flex items-center mb-6">
-               <span className="text-xl mr-2"><FaEnvelope /></span>
+               <span className="text-xl mr-2"><Mail /></span>
                <h2 className="text-xl font-semibold text-gray-900">
                   Email Provider (Postmark, SendGrid, etc.)
                </h2>
@@ -27,7 +28,7 @@ export default function Notification() {
 
             {/* Save Changes Button */}
             <div className="flex justify-end mt-6 pt-4 border-t border-gray-100">
-               <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-colors">
+               <button className="bg-[#FF7A2C] text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors">
                   Save Changes
                </button>
             </div>
@@ -36,7 +37,7 @@ export default function Notification() {
          {/* --- 📱 SMS Provider (Twilio) Section --- */}
          <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
             <div className="flex items-center mb-6">
-               <span className="text-xl mr-2"><FaMessage /></span>
+               <span className="text-xl mr-2"><Mail /></span>
                <h2 className="text-xl font-semibold text-gray-900">
                   SMS Provider (Twilio)
                </h2>
@@ -61,7 +62,7 @@ export default function Notification() {
 
             {/* Save Changes Button */}
             <div className="flex justify-end pt-4">
-               <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-colors">
+               <button className="bg-[#FF7A2C] text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors">
                   Save Changes
                </button>
             </div>

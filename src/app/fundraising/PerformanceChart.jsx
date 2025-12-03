@@ -38,7 +38,7 @@ export default function PerformanceChart() {
    };
 
    return (
-      <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-100">
+      <div className="p-6 bg-white rounded-xl shadow-lg border border-gray-100 h-full">
          <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Fundraising performance</h3>
             <select className="bg-gray-100 text-gray-700 border border-gray-300 rounded-lg py-1 px-3 text-sm cursor-pointer focus:ring-indigo-500 focus:border-indigo-500 transition-colors appearance-none">

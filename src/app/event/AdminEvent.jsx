@@ -9,9 +9,6 @@ import EventBadge from '@/app/event/EventBadge';
 import { useApiClient } from "@/lib/apiClient";
 import { useSelectedItem } from "@/store/useSelectedItem";
 import { formatToReadableDate, formatToTime, getEventStatus} from '@/app/components/DateTimeFormat';
-
-import { FaPlus, FaCalendar, FaSearch, FaEllipsisH, FaClock, FaList, FaShare } from 'react-icons/fa';
-import { FaLocationPin } from 'react-icons/fa6';
 import { 
   Calendar,
   EllipsisIcon,

@@ -1,12 +1,11 @@
 'use client';
 import { Fragment, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import Sidebar from '@/app/components/Sidebar';
 import Header from '@/app/components/Header';
 import Profile from '@/app/settings/user/Profile';
 import Notification from '@/app/settings/Notification';
 import { FaUsers, FaLock, FaCreditCard, FaCopyright } from 'react-icons/fa';
-
+import { User, Shield, CreditCard, Lock, Link as LinkIcon } from 'lucide-react';
 
 export default function SettingsPage() {
    const { user, role, logout } = useAuth();
@@ -15,10 +14,10 @@ export default function SettingsPage() {
    const isAdmin = user?.role;
 
    const tabDatas = [
-      { id: 'profile', label: 'Profile', icon: FaUsers },
-      { id: 'security', label: 'Security', icon: FaLock },
-      { id: 'billing', label: 'Billing', icon: FaCreditCard },
-      { id: 'privacy', label: 'Privacy', icon: FaCopyright },
+      { id: 'profile', label: 'Profile', icon: User },
+      { id: 'security', label: 'Security', icon: Shield },
+      { id: 'billing', label: 'Billing', icon: CreditCard },
+      { id: 'privacy', label: 'Privacy', icon: Lock },
    ];
    
    return (
@@ -39,12 +38,12 @@ export default function SettingsPage() {
                   }
                `}
             >
-               <tab.icon /><span>{tab.label}</span>
+               <tab.icon size={16} /><span>{tab.label}</span>
             </button>
             ))}
          </div>
 
-         <div className="tab-content">
+         <div className="tab-content border-b border-gray-200 mb-8">
             {activeTab === 'profile' && <Profile />}
             {activeTab === 'security' && <Notification />}
             {activeTab === 'billing' && <Notification />}

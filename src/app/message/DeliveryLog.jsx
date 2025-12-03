@@ -1,5 +1,7 @@
+'use client';
+import Link from 'next/link';
 import { useState } from 'react';
-import { FaSearch, FaPlus, FaEllipsisV, FaCheckCircle, FaMinusCircle, FaFile, FaUserPlus, FaMailBulk, FaFacebookMessenger } from 'react-icons/fa';
+import { Plus, Search, Clock, CheckCircle, Users, User } from 'lucide-react';
 
 export default function DeliveryLog({ messages }) {
 
@@ -7,14 +9,13 @@ export default function DeliveryLog({ messages }) {
    const [filter, setFilter] = useState('All Types');  
 
    // Get unique tiers for the filter dropdown
-   const uniqueTypes = ['All Types', ...new Set(messages.map(message => message.template))];
+   const uniqueTypes = ['All Types', ...new Set(messages.map(message => message.title))];
 
    const filteredMembers = messages.filter(message => {
       const matchesSearch = 
-         message.template.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         message.subject.toLowerCase().includes(searchTerm.toLowerCase());
+         message.title.toLowerCase().includes(searchTerm.toLowerCase());
             
-      const matchesTypes = filter === 'All Types' || message.template === filter;
+      const matchesTypes = filter === 'All Types' || message.title === filter;
       
       return matchesSearch && matchesTypes;
    });
@@ -30,10 +31,35 @@ export default function DeliveryLog({ messages }) {
       }
    };
 
-   const DeliveryLogRow = ({ member }) => {
+   const DeliveryLogRow = ({ log }) => {
       return (
-         <div className="bg-white text-black p-6 rounded-xl shadow-lg border border-gray-700 hover:border-gray-600 transition-all cursor-pointer mb-6">
-            {/* Top Section: Title, Group, Time */}
+         <div className="p-4 bg-white border-b border-gray-100 last:border-none">
+            <div className="flex items-start justify-between mb-4">
+               <div>
+                  <h4 className="text-base font-semibold text-gray-900 mb-1">{log.title}</h4>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                     <TargetBadge type={log.target.type} label={log.target.label} />
+                     <Clock size={14} />
+                     <span>{log.time}</span>
+                  </div>
+               </div>
+               <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-green-700 bg-green-50 rounded-full">
+                  <CheckCircle size={14} /> Sent
+               </span>
+            </div>
+
+            <div className="grid grid-cols-5 gap-4 text-center">
+               {Object.entries(log.stats).map(([key, value]) => (
+               <div key={key}>
+                  <p className="text-xl font-bold text-gray-900">{value}</p>
+                  <p className={`text-sm font-medium ${key === 'failed' && value > 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                     {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </p>
+               </div>
+               ))}
+            </div>
+         </div>
+         /*<div className="bg-white text-black p-6 rounded-xl shadow-lg border border-gray-700 hover:border-gray-600 transition-all cursor-pointer mb-6">
             <div className="flex justify-between items-start mb-4">
                <div>
                   <h3 className="text-xl font-semibold mb-1">
@@ -41,13 +67,11 @@ export default function DeliveryLog({ messages }) {
                   </h3>
                </div>
                
-               {/* Status Badge */}
                <span className="px-3 py-1 bg-green-200 text-green-400 rounded-full text-xs font-semibold flex items-center flex-shrink-0">
                   <FaFacebookMessenger className="w-3 h-3 mr-1" /> Sent
                </span>
             </div>
 
-            {/* Metrics Grid */}
             <div className="grid grid-cols-5 gap-4 pt-4 border-t border-gray-700">
                {member.delivery_log.map((key, value) => {
                   const displayColor = key.label === 'Failed' ? 'text-red-400' : 'text-green-400';
@@ -61,7 +85,16 @@ export default function DeliveryLog({ messages }) {
                   );
                })}
             </div>
-        </div>
+        </div>*/
+      );
+   };
+
+   const TargetBadge = ({ type, label }) => {
+      const Icon = type === 'group' ? Users : User;
+      return (
+         <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
+            <Icon size={12} /> {label}
+         </span>
       );
    };
 
@@ -77,8 +110,56 @@ export default function DeliveryLog({ messages }) {
    );
 
    return (
-      <div className="mt-8 bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200">
-         {/* Header and Search/Filter Bar */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+         <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200">
+            <div>
+               <h2 className="text-lg font-semibold text-gray-900 mb-1">Delivery Log</h2>
+               <p className="text-sm text-gray-600">Track sent messages and engagement</p>
+            </div>
+            <Link 
+               href="/message/add" 
+               className="flex items-center gap-2 px-4 py-2 bg-[#FF7A2C] text-white rounded-lg transition-colors font-medium shadow-sm">
+               <Plus size={18} />
+               Compose Message
+            </Link>
+         </div>
+
+         <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+               <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+               <input 
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by name, email, campaign, amount" 
+                  className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/50 focus:border-primary-orange"
+               />
+            </div>
+            <select
+               value={filter}
+               onChange={(e) => setFilter(e.target.value)}
+               className="w-full md:w-48 p-3 bg-white border border-gray-300 rounded-xl text-gray-900 cursor-pointer focus:border-transparent transition shadow-sm"
+            >
+               {uniqueTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+               ))}
+            </select>
+         </div>
+
+         <div className="divide-y divide-gray-100 overflow-x-auto">
+            {filteredMembers.length > 0 ? (
+               filteredMembers.map(member => (
+                  <DeliveryLogRow key={member.id} log={member} />
+               ))
+            ) : (
+               <span className="px-6 py-10 text-center text-gray-500">
+                  No match your current filters.
+               </span>
+            )}
+         </div>
+      </div>
+
+      /*<div className="mt-8 bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200">
          <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
                <h3 className="text-xl font-bold text-gray-900">Delivery Log</h3>
@@ -89,7 +170,6 @@ export default function DeliveryLog({ messages }) {
             </div>
             
             <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4">
-               {/* Search Bar */}
                <div className="relative flex-1">
                   <input
                      type="text"
@@ -101,7 +181,6 @@ export default function DeliveryLog({ messages }) {
                   <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                </div>
                
-               {/* Tier Filter */}
                <select
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
@@ -114,7 +193,6 @@ export default function DeliveryLog({ messages }) {
             </div>
          </div>
          
-         {/* Table */}
          <div className="overflow-x-auto">
             {filteredMembers.length > 0 ? (
                filteredMembers.map(member => (
@@ -126,6 +204,6 @@ export default function DeliveryLog({ messages }) {
                </span>
             )}
          </div>
-      </div>
+      </div>*/
    );
 };

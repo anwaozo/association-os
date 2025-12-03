@@ -1,6 +1,7 @@
+'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { FaSearch, FaPlus } from 'react-icons/fa';
+import { Plus, Search, ChevronDown, Mail } from 'lucide-react';
 
 export default function MessageList({ messages }) {
 
@@ -31,76 +32,84 @@ export default function MessageList({ messages }) {
       }
    };
 
+   const Badge = ({ type }) => {
+      const isEmail = type === 'Email';
+      const bgColor = isEmail ? 'bg-green-100' : 'bg-orange-100';
+      const textColor = isEmail ? 'text-green-800' : 'text-primary-orange';
+      return (
+         <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${bgColor} ${textColor}`}>
+            {type}
+         </span>
+      );
+   };
+
    const MemberRow = ({ member }) => {
       // Simple dropdown for actions (placeholder)
       const [isMenuOpen, setIsMenuOpen] = useState(false);
       const actionClasses = "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left";
       
       return (
-         <tr className="border-b border-gray-100 hover:bg-gray-50 transition duration-100">
-            <td className="px-6 py-4 whitespace-nowrap">
-               <div className="text-sm font-semibold text-gray-900">{member.template}</div>
-               <div className="text-xs text-gray-500">{member.subject}</div>
-            </td>
-            
-            <td className="px-6 py-4 whitespace-nowrap">
-               <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ml-3 ${notificationType(member.notification_type)}`}>
-                  {member.notification_type}
-               </span> 
-               <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ml-3 border-gray-200 bg-gray-100`}>
-                  Edit
-               </span>
-               <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ml-3 border-gray-200 bg-gray-100`}>
-                  Use
-               </span>
-            </td>
-         </tr>
+         <div className="flex items-center justify-between p-4 bg-white border-b border-gray-100 last:border-none">
+            <div className="flex items-center gap-4">
+               <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
+               <Mail size={20} />
+               </div>
+               <div>
+                  <h4 className="text-sm font-medium text-gray-900">{member.template}</h4>
+                  <p className="text-sm text-gray-500">{member.subject}</p>
+               </div>
+            </div>
+            <div className="flex items-center gap-3">
+               <Badge type={member.notification_type} />
+               <button className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+               Edit
+               </button>
+               <button className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+               Use
+               </button>
+            </div>
+         </div>
       );
    };
 
    return (
-      <div className="mt-8 bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200">
-         {/* Header and Search/Filter Bar */}
-         <div className="mb-6">
-            <div className="flex justify-between items-center mb-4">
-               <h3 className="text-xl font-bold text-gray-900">Message Templates</h3>
-               <Link 
-                  className="flex items-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-lg"
-                  href={"/message/add"}
-               >
-                  <FaPlus className="w-5 h-5 mr-2" />
-                  Compose Message
-               </Link>
+     <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+         <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200">
+            <div>
+               <h2 className="text-lg font-semibold text-gray-900 mb-1">Message Templates</h2>
+               <p className="text-sm text-gray-600">Pre-configured templates for common notifications</p>
             </div>
-            
-            <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4">
-               {/* Search Bar */}
-               <div className="relative flex-1">
-                  <input
-                     type="text"
-                     placeholder="Search by name, tickets, or email"
-                     value={searchTerm}
-                     onChange={(e) => setSearchTerm(e.target.value)}
-                     className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:border-transparent transition shadow-inner"
-                  />
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-               </div>
-               
-               {/* Types Filter */}
-               <select
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="w-full md:w-48 p-3 bg-white border border-gray-300 rounded-xl text-gray-900 cursor-pointer focus:border-transparent transition shadow-sm"
-               >
-                  {uniqueTypes.map(type => (
-                     <option key={type} value={type}>{type}</option>
-                  ))}
-               </select>
-            </div>
+            <Link 
+               href="/message/add" 
+               className="flex items-center gap-2 px-4 py-2 bg-[#FF7A2C] text-white rounded-lg transition-colors font-medium shadow-sm">
+               <Plus size={18} />
+               Compose Message
+            </Link>
          </div>
-         
-         {/* Table */}
-         <div className="overflow-x-auto">
+
+         <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+               <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+               <input 
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by name, email, campaign, amount" 
+                  className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/50 focus:border-primary-orange"
+               />
+            </div>
+            <select
+               value={filter}
+               onChange={(e) => setFilter(e.target.value)}
+               className="w-full md:w-48 p-3 bg-white border border-gray-300 rounded-xl text-gray-900 cursor-pointer focus:border-transparent transition shadow-sm"
+            >
+               {uniqueTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+               ))}
+            </select>
+         </div>
+      
+         <div className="divide-y divide-gray-100 overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
                <tbody className="bg-white divide-y divide-gray-100">
                   {filteredMembers.length > 0 ? (

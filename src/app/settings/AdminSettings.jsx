@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import Header from '@/app/components/Header';
 import Payment from '@/app/settings/Payment';
 import Notification from '@/app/settings/Notification';
-import { FaWallet, FaBell } from 'react-icons/fa';
+import { WalletCards, Bell} from 'lucide-react';
 
 
 export default function SettingsPage() {
@@ -13,8 +13,8 @@ export default function SettingsPage() {
    const isAdmin = user?.role;
 
    const tabDatas = [
-      { id: 'payments', label: 'Payments', icon: FaWallet },
-      { id: 'notifications', label: 'Notifications', icon: FaBell },
+      { id: 'payments', label: 'Payments', icon: WalletCards },
+      { id: 'notifications', label: 'Notifications', icon: Bell },
    ];
    
    return (
@@ -35,7 +35,7 @@ export default function SettingsPage() {
                   }
                `}
             >
-               <tab.icon /><span>{tab.label}</span>
+               <tab.icon size={16} /><span>{tab.label}</span>
             </button>
             ))}
          </div>

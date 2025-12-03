@@ -1,9 +1,10 @@
 'use client';
 import { useState } from 'react';
-import Sidebar from '@/app/components/Sidebar';
 import InputField from '@/app/components/forms/InputField';
 import MultiSelect from '@/app/components/forms/MultiSelect';
 import { FaChevronLeft, FaEnvelope, FaChevronDown, FaFileAlt, FaEye } from 'react-icons/fa';
+import ProtectedRoute from '@/app/components/ProtectedRoute';
+import { Mail } from 'lucide-react';
 
 export default function MessageAddPage() {
    const [isOpen, setIsOpen] = useState(true);
@@ -60,143 +61,137 @@ export default function MessageAddPage() {
    const previewBody = composeMessageForm.message.split('\n').slice(0, 3).join('\n'); 
    
    return (
-      <div className="flex min-h-screen bg-white text-gray-800">
-         {/* Sidebar */}
-         <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
+      <ProtectedRoute>
+         <div className="space-y-6">
+            {/* Breadcrumb / Back Link */}
+            <nav className="flex items-center space-x-2 text-sm text-black-500 font-medium">
+               <button onClick={onBack} className="flex items-center hover:text-[#FF884D] transition">
+                  <Mail className="w-5 h-4 mr-0.5" /> Messages
+               </button>
+               <span><FaChevronLeft /></span>
+               <span className="text-gray-900 truncate max-w-xs">Compose Message</span>
+            </nav>
 
-         {/* Main Content */}
-         <main className="flex-grow p-8">
-            <div className="space-y-6">
-               {/* Breadcrumb / Back Link */}
-               <nav className="flex items-center space-x-2 text-sm text-black-500 font-medium">
-                  <button onClick={onBack} className="flex font-bold items-center hover:text-[#FF884D] transition">
-                     <FaEnvelope className="w-5 h-4 mr-0.5" /> Messages
-                  </button>
-                  <span><FaChevronLeft /></span>
-                  <span className="text-gray-900 font-bold truncate max-w-xs">Compose Message</span>
-               </nav>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6">
+               <div className="flex flex-wrap items-center space-x-4 mb-4 sm:mb-0">
+                  <h1 className="text-3xl font-bold text-gray-900">Compose New Message</h1>
+               </div>
+            </div>
 
-               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6">
-                  <div className="flex flex-wrap items-center space-x-4 mb-4 sm:mb-0">
-                     <h1 className="text-3xl font-bold text-gray-900">Compose New Message</h1>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+               {/* Form Section (Takes 2/3 width on large screens) */}
+               <div className="lg:col-span-2 bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-5">
+                        
+                     {/* Notification Type */}
+                     <InputField
+                        label="Notification Type"
+                        name="notification_type"
+                        type="select"
+                        values={notificationTypes}
+                        placeholder=""
+                        error={errors?.notification_type}
+                        onFocus={() => setErrors(prev => ({ ...prev, notification_type: null }))}
+                     />
+                     <InputField
+                        label="Template"
+                        name="template"
+                        type="select"
+                        values={templates}
+                        placeholder=""
+                        error={errors?.template}
+                        onFocus={() => setErrors(prev => ({ ...prev, template: null }))}
+                     />
+                     <InputField
+                        label="Audience"
+                        name="audience"
+                        type="select"
+                        values={audienceTypes}
+                        placeholder=""
+                        error={errors?.audience}
+                        onFocus={() => setErrors(prev => ({ ...prev, audience: null }))}
+                        onChange={(e) => setComposeMessageForm({ ...composeMessageForm, audience: e.target.value })}
+                     />
+                     {composeMessageForm.audience === 'Custom Selection' && (
+                        <MultiSelect
+                           label="Recipient(s) Name"
+                           name="recipients"
+                           options={options}
+                           value={selected}
+                           onChange={setSelected}
+                           placeholder="Search your recipient name"
+                        />
+                     )}
+                     {composeMessageForm.audience === 'Event Attendees' && (
+                        <MultiSelect
+                           label="Event Title"
+                           name="event_title"
+                           options={options}
+                           value={selected}
+                           onChange={setSelected}
+                           placeholder="Search your recipient name"
+                        />
+                     )}
+                     <InputField
+                        label="Subject"
+                        name="subject"
+                        type="text"
+                        placeholder="eg., All Members"
+                        error={errors?.subject}
+                        onFocus={() => setErrors(prev => ({ ...prev, subject: null }))}
+                        onChange={(e) => setComposeMessageForm({ ...composeMessageForm, subject: e.target.value })}
+                     />
+                     <InputField
+                        label="Message"
+                        name="message"
+                        type="textarea"
+                        placeholder="eg., Write your message here..."
+                        error={errors?.message}
+                        onFocus={() => setErrors(prev => ({ ...prev, message: null }))}
+                        onChange={(e) => setComposeMessageForm({ ...composeMessageForm, message: e.target.value })}
+                     />
+
+                     {/* Image Upload */}
+                     <div className="mt-5 flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                           <label htmlFor="file-upload" 
+                                 className="flex-1 w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 bg-gray-50 text-gray-700 rounded-lg shadow-sm cursor-pointer hover:bg-gray-100 transition-colors text-sm font-medium">
+                              <FaFileAlt className="w-4 h-4 mr-2" /> Choose file
+                              <input id="file-upload" name="file-upload" type="file" className="sr-only" />
+                           </label>
+                           <span className="text-gray-500 text-sm">No file chosen</span>
+                           <button className="text-indigo-600 hover:text-indigo-800 text-sm font-medium whitespace-nowrap">
+                              + Add Attachment
+                           </button>
+                     </div>
+
                   </div>
                </div>
 
-               <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                  {/* Form Section (Takes 2/3 width on large screens) */}
-                  <div className="lg:col-span-2 bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200">
-                     <div className="grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-5">
-                           
-                        {/* Notification Type */}
-                        <InputField
-                           label="Notification Type"
-                           name="notification_type"
-                           type="select"
-                           values={notificationTypes}
-                           placeholder=""
-                           error={errors?.notification_type}
-                           onFocus={() => setErrors(prev => ({ ...prev, notification_type: null }))}
-                        />
-                        <InputField
-                           label="Template"
-                           name="template"
-                           type="select"
-                           values={templates}
-                           placeholder=""
-                           error={errors?.template}
-                           onFocus={() => setErrors(prev => ({ ...prev, template: null }))}
-                        />
-                        <InputField
-                           label="Audience"
-                           name="audience"
-                           type="select"
-                           values={audienceTypes}
-                           placeholder=""
-                           error={errors?.audience}
-                           onFocus={() => setErrors(prev => ({ ...prev, audience: null }))}
-                           onChange={(e) => setComposeMessageForm({ ...composeMessageForm, audience: e.target.value })}
-                        />
-                        {composeMessageForm.audience === 'Custom Selection' && (
-                           <MultiSelect
-                              label="Recipient(s) Name"
-                              name="recipients"
-                              options={options}
-                              value={selected}
-                              onChange={setSelected}
-                              placeholder="Search your recipient name"
-                           />
-                        )}
-                        {composeMessageForm.audience === 'Event Attendees' && (
-                           <MultiSelect
-                              label="Event Title"
-                              name="event_title"
-                              options={options}
-                              value={selected}
-                              onChange={setSelected}
-                              placeholder="Search your recipient name"
-                           />
-                        )}
-                        <InputField
-                           label="Subject"
-                           name="subject"
-                           type="text"
-                           placeholder="eg., All Members"
-                           error={errors?.subject}
-                           onFocus={() => setErrors(prev => ({ ...prev, subject: null }))}
-                           onChange={(e) => setComposeMessageForm({ ...composeMessageForm, subject: e.target.value })}
-                        />
-                        <InputField
-                           label="Message"
-                           name="message"
-                           type="textarea"
-                           placeholder="eg., Write your message here..."
-                           error={errors?.message}
-                           onFocus={() => setErrors(prev => ({ ...prev, message: null }))}
-                           onChange={(e) => setComposeMessageForm({ ...composeMessageForm, message: e.target.value })}
-                        />
-
-                        {/* Image Upload */}
-                        <div className="mt-5 flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
-                              <label htmlFor="file-upload" 
-                                    className="flex-1 w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 bg-gray-50 text-gray-700 rounded-lg shadow-sm cursor-pointer hover:bg-gray-100 transition-colors text-sm font-medium">
-                                 <FaFileAlt className="w-4 h-4 mr-2" /> Choose file
-                                 <input id="file-upload" name="file-upload" type="file" className="sr-only" />
-                              </label>
-                              <span className="text-gray-500 text-sm">No file chosen</span>
-                              <button className="text-indigo-600 hover:text-indigo-800 text-sm font-medium whitespace-nowrap">
-                                 + Add Attachment
-                              </button>
+               {/* Preview Panel (Takes 1/3 width on large screens) */}
+               <div className="lg:col-span-2">
+                  <div className="sticky top-6 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        Preview
+                     </h3>
+                     
+                     <div className="border border-gray-300 bg-orange-50 p-4 rounded-lg">
+                        <p className="text-xs text-gray-600 mb-2">To: {composeMessageForm.audience || audienceTypes[0].value}</p>
+                        <h4 className="text-base font-semibold text-gray-900 mb-3 border-b pb-2 border-gray-200">
+                           {composeMessageForm.subject || 'No Subject'}
+                        </h4>
+                        <div className="text-sm text-gray-800 whitespace-pre-line">
+                           {composeMessageForm.message ? previewBody : 'No message body.'}
                         </div>
-
-                     </div>
-                  </div>
-
-                  {/* Preview Panel (Takes 1/3 width on large screens) */}
-                  <div className="lg:col-span-2">
-                     <div className="sticky top-6 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                           Preview
-                        </h3>
-                        
-                        <div className="border border-gray-300 bg-orange-50 p-4 rounded-lg">
-                           <p className="text-xs text-gray-600 mb-2">To: {composeMessageForm.audience || audienceTypes[0].value}</p>
-                           <h4 className="text-base font-semibold text-gray-900 mb-3 border-b pb-2 border-gray-200">
-                              {composeMessageForm.subject || 'No Subject'}
-                           </h4>
-                           <div className="text-sm text-gray-800 whitespace-pre-line">
-                              {composeMessageForm.message ? previewBody : 'No message body.'}
-                           </div>
-                           {composeMessageForm.message.split('\n').length > 3 && (
-                              <p className="text-xs text-gray-500 mt-2">
-                                    [Message preview truncated. Full message visible on mobile.]
-                              </p>
-                           )}
-                        </div>
+                        {composeMessageForm.message.split('\n').length > 3 && (
+                           <p className="text-xs text-gray-500 mt-2">
+                                 [Message preview truncated. Full message visible on mobile.]
+                           </p>
+                        )}
                      </div>
                   </div>
                </div>
             </div>
-         </main>
-      </div>
+         </div>
+      </ProtectedRoute>
    );
 }
