@@ -10,7 +10,7 @@ export default function SettingsPage() {
    
    return (
       <ProtectedRoute>
-         {isAdmin !== 1 ? <AdminSettings /> : <UserSettings />}
+         {isAdmin == 1 ? <AdminSettings /> : <UserSettings />}
       </ProtectedRoute>
    );
 }

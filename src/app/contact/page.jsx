@@ -31,13 +31,15 @@ export default function ContactPage() {
    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
    const [successMessage, setSuccessMessage] = useState(null);
    const [activeMenuId, setActiveMenuId] = useState(0);
+   const [searchTerm, setSearchTerm] = useState('');
+   const [statusFilter, setStatusFilter] = useState('All');
 
    const toggleMenu = (id) => {
       setActiveMenuId(activeMenuId === id ? null : id);
    };
 
    const stats = [
-      { title: 'Total Contacts', value: 312, color: 'bg-green-200'},
+      { title: 'Total Contacts', value: contacts.length, color: 'bg-green-200'},
       { title: 'Active Members', value: 28, color: 'bg-red-200'},
       { title: 'Past Due', value: 8, color: 'bg-violet-200'},
       { title: 'Prospects', value: 15, color: 'bg-blue-200'},
@@ -138,22 +140,30 @@ export default function ContactPage() {
    /** Contact Import Model Start */
    const openContactImportModal = () => setIsImportModalOpen(true);
 
-   const handleBulkImport = (newContacts) => {
+   const handleBulkImport = async (newContacts) => {
       const currentMaxId = contacts.reduce((max, contact) => Math.max(max, contact.id), 0);
       let nextId = currentMaxId + 1;
 
       const formattedNewContacts = newContacts.map(c => ({
-         id: nextId++,
          name: `${c.firstName} ${c.lastName}`,
          email: c.email,
-         phone: c.phone || 'N/A',
-         status: c.status || 'Contact',
-         tier: c.status === 'Active' ? 'Bulk Imported' : 'New Prospect',
-         joinDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+         phone: c.phone,
+         role: c.status
       }));
 
-      setContacts([...formattedNewContacts, ...contacts]);
-      setSuccessMessage(`${formattedNewContacts.length} contacts imported successfully!`);
+      try {
+         const res = await api.post("/auth/bulk_register", { users: formattedNewContacts }, {timeout: 0});
+         if(res.status === 200) {
+            showToast(`Contact ${formattedNewContacts.length} contacts imported successfully!`);
+            setIsModalOpen(false);
+            const list = await api.get("/contacts");
+            setContacts(list.data);
+         } 
+      } catch (err) {
+         console.error(err);
+         showToast("Failed to import contacts", "error");
+         return;
+      }
       
       setIsImportModalOpen(false);
 
@@ -162,6 +172,13 @@ export default function ContactPage() {
       }, 3000);
    };
    /** Contact Import Model End */
+
+   const filteredContacts = contacts.filter(contact => {
+      const matchesSearch = contact.name.toLowerCase().includes(searchTerm.toLowerCase());
+      //const contactStatus = getContactStatus(contact.date);
+      const matchesStatus = statusFilter === "All";
+      return matchesSearch && matchesStatus;
+   });
 
    return (
       <ProtectedRoute>
@@ -199,6 +216,8 @@ export default function ContactPage() {
                   <input 
                      type="text" 
                      placeholder="Search by name, number or email..." 
+                     value={searchTerm}
+                     onChange={(e) => setSearchTerm(e.target.value)}
                      className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 border-none rounded-md text-sm focus:ring-2 focus:ring-gray-200 outline-none placeholder-gray-400"
                   />
                </div>
@@ -215,7 +234,7 @@ export default function ContactPage() {
                </div>
             </div>
 
-            {contacts.length > 0 ? (
+            {filteredContacts.length > 0 ? (
             <div className="overflow-x-auto">
                <table className="min-w-full border border-gray-200 rounded-lg">
                   <thead className="bg-gray-50 text-gray-700 uppercase text-xs font-semibold">
@@ -231,7 +250,7 @@ export default function ContactPage() {
                   </thead>
 
                   <tbody className="divide-y divide-gray-100 text-sm text-gray-800">
-                     {contacts.map(contact => (
+                     {filteredContacts.map(contact => (
                      <tr key={contact.id} className="hover:bg-gray-50">
                         <td className="p-4"><input type="checkbox" className="rounded border-gray-300" /></td>
                         <td className="px-6 py-4 font-medium">{contact.name}</td>

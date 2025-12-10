@@ -95,7 +95,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="space-y-4">
-               {upcomingEvents.map(upcomingEvent => 
+               {upcomingEvents.length > 0 && upcomingEvents.map(upcomingEvent => 
                   <div className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
                      <div>
                      <h4 className="font-medium text-slate-900">{upcomingEvent.name}</h4>

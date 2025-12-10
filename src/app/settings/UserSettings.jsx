@@ -3,9 +3,10 @@ import { Fragment, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Header from '@/app/components/Header';
 import Profile from '@/app/settings/user/Profile';
-import Notification from '@/app/settings/Notification';
-import { FaUsers, FaLock, FaCreditCard, FaCopyright } from 'react-icons/fa';
-import { User, Shield, CreditCard, Lock, Link as LinkIcon } from 'lucide-react';
+import Security from '@/app/settings/user/Security';
+import Billing from '@/app/settings/user/Billing';
+import Privacy from '@/app/settings/user/Privacy';
+import { CircleUser, LockKeyhole, Copyright, CreditCard, Lock, Link as LinkIcon } from 'lucide-react';
 
 export default function SettingsPage() {
    const { user, role, logout } = useAuth();
@@ -14,10 +15,10 @@ export default function SettingsPage() {
    const isAdmin = user?.role;
 
    const tabDatas = [
-      { id: 'profile', label: 'Profile', icon: User },
-      { id: 'security', label: 'Security', icon: Shield },
+      { id: 'profile', label: 'Profile', icon: CircleUser },
+      { id: 'security', label: 'Security', icon: LockKeyhole },
       { id: 'billing', label: 'Billing', icon: CreditCard },
-      { id: 'privacy', label: 'Privacy', icon: Lock },
+      { id: 'privacy', label: 'Privacy', icon: Copyright },
    ];
    
    return (
@@ -45,9 +46,9 @@ export default function SettingsPage() {
 
          <div className="tab-content border-b border-gray-200 mb-8">
             {activeTab === 'profile' && <Profile />}
-            {activeTab === 'security' && <Notification />}
-            {activeTab === 'billing' && <Notification />}
-            {activeTab === 'privacy' && <Notification />}
+            {activeTab === 'security' && <Security />}
+            {activeTab === 'billing' && <Billing />}
+            {activeTab === 'privacy' && <Privacy />}
          </div>
 
       </Fragment>

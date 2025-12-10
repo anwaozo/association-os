@@ -31,11 +31,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       { name: 'Notifications', icon: <Bell size={18} />, href: '/notification' },
       { name: 'Messages', icon: <Mail size={18} />, href: '/message' },
       { name: 'Settings', icon: <Settings size={18} />, href: '/settings' },
-   ] : (user?.role === 2 ? [
-      { name: 'Home', icon: <FaHome />, href: '/dashboard' },
-      { name: 'Events', icon: <FaCalendarAlt />, href: '/event' },
-      { name: 'Directory', icon: <FaUsers />, href: '/directory' },
-      { name: 'Settings', icon: <FaCog />, href: '/settings' },
+   ] : (user?.role === 2 || user?.role === 3 ? [
+      { name: 'Home', icon: <LayoutGrid size={18} />, href: '/dashboard' },
+      { name: 'Events', icon: <Calendar size={18} />, href: '/event' },
+      { name: 'Directory', icon: <Users size={18} />, href: '/directory' },
+      { name: 'Settings', icon: <Settings size={18} />, href: '/settings' },
    ] : []);
 
    return (

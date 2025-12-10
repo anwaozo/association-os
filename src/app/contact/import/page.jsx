@@ -39,7 +39,6 @@ export default function ContactImportPage({ isOpen, onClose, onBulkImport }) {
    };
 
    const parseCSV = (csvText) => {
-      // Simple line split (handles basic CSV, ignores complex quotes/commas)
       const lines = csvText.split('\n').filter(line => line.trim() !== '');
       if (lines.length === 0) return [];
 
@@ -62,7 +61,7 @@ export default function ContactImportPage({ isOpen, onClose, onBulkImport }) {
                lastName: values[1] || 'N/A',
                email: values[2],
                phone: values[3] || 'N/A',
-               status: values[4] || 'Contact',
+               status: values[4] || 2,
             };
             // Basic email validation on import
             if (contact.email && contact.email.includes('@')) {
@@ -111,7 +110,7 @@ export default function ContactImportPage({ isOpen, onClose, onBulkImport }) {
    };
 
    const handleDownloadTemplate = () => {
-      const csvContent = "firstName,lastName,email,phone,status\nJohn,Doe,john@example.com,(555) 123-4567,Active\nJane,Smith,jane@example.com,(555) 987-6543,Contact";
+      const csvContent = "firstName,lastName,email,phone,role\nJohn,Doe,john@example.com,5551234567,2\nJane,Smith,jane@example.com,5559876543,3";
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
