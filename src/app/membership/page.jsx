@@ -9,13 +9,7 @@ import { useApiClient } from "@/lib/apiClient";
 import { useToast } from "@/app/components/toast/ToastContext";
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 import { useSelectedItem } from "@/store/useSelectedItem";
-import { 
-  Search,
-  Plus,
-  CheckCircle,
-  User2,
-  EllipsisIcon
-} from 'lucide-react';
+import { Search, Plus, CheckCircle, User2, EllipsisIcon, Pencil, Send, Trash2, Eye } from 'lucide-react';
 
 export default function MembershipPage() {
    const api = useApiClient();
@@ -24,11 +18,35 @@ export default function MembershipPage() {
    const [membership, setMembership] = useState([]);
    const [isModalOpen, setIsModalOpen] = useState(false);
    const [searchTerm, setSearchTerm] = useState("");
+   const [activeMenuId, setActiveMenuId] = useState(0);
+   const [modalMode, setModalMode] = useState("add");
+   const [selectedTier, setSelectedTier] = useState(null);
+
+   const openTierAddModal = () => {
+      setModalMode("add");
+      setSelectedTier(null);
+      setIsModalOpen(true);
+   };
+
+   const toggleMenu = (id) => {
+      setActiveMenuId(activeMenuId === id ? null : id);
+   };
 
    const addNewMembership = async (newMembership) => {
       try {
          const res = await api.post("/memberships", newMembership);
          showToast("Membership created successfully!", "success");
+         setIsModalOpen(false);
+         const list = await api.get("/memberships");
+         setMembership(list.data);
+      } catch (err) {
+      }
+   };
+
+   const handleUpdateTier = async (updateMembership) => {
+      try {
+         const res = await api.put(`/memberships/${selectedTier.id}`, updateMembership);
+         showToast("Membership updated successfully!", "success");
          setIsModalOpen(false);
          const list = await api.get("/memberships");
          setMembership(list.data);
@@ -43,34 +61,60 @@ export default function MembershipPage() {
             setMembership(res.data);
          }
       };
-
       fetchMebersips();
    }, []);
 
    const stats = [
-      { title: "Total Tiers", value: 4, color: "indigo" },
+      { title: "Total Tiers", value: membership?membership.length:0, color: "indigo" },
       { title: "Total Members", value: 345, color: "green" },
       { title: "Most Popular", value: "Professional", color: "yellow" },
    ];
 
    const TierCard = ({ tier }) => (
       <div className="bg-white p-6 rounded-xl shadow-md border-b-4 border-gray-200 hover:border-indigo-500 transition-all">
-         <div className="flex justify-between items-start mb-4">
+         <div className="flex justify-between items-start mb-4 relative">
             <div>
                <h3 className="text-xl font-bold text-gray-900 mb-1">{tier.name}</h3>
                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600"><Currency amount={tier.price} /></span>
+                  <span className="text-sm text-gray-600"><Currency amount={tier.price} /> / {tier.billing_cadence }</span>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">{tier.auto_renewal === true ? 'Autorenew': 'No Autorenew'}</span>
                </div>
             </div>
-            <button className="text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors">
-               <Link
-                  href={`membership/${tier.slug}`}
-                  onClick={() => setItem(tier)}
-               >
-                  <EllipsisIcon className="w-5 h-5" />
-               </Link>
+            <button 
+               type="button"
+               className="text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+               onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMenu(tier.id);}}
+            >
+               <EllipsisIcon className="w-5 h-5" />
             </button>
+            {activeMenuId === tier.id && (
+               <div 
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute right-12 top-8 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-10 py-1"
+               >
+                  <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
+                     <Eye size={14} /> View Members
+                  </button>
+                  <button 
+                     className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3 cursor-pointer"
+                     onClick={() => {
+                        setModalMode("edit");
+                        setSelectedTier(tier);
+                        setIsModalOpen(true);
+                        setActiveMenuId(null);
+                     }}
+                  >
+                     <Pencil size={14} /> Edit Tier
+                  </button>
+                  <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
+                     <Send size={14} /> Invite Contact
+                  </button>
+                  <div className="h-px bg-gray-100 my-1"></div>
+                  <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3">
+                     <Trash2 size={14} /> Delete
+                  </button>
+               </div>
+            )}
          </div>
 
          <div className="mb-4">
@@ -93,7 +137,7 @@ export default function MembershipPage() {
          <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
             <span className="text-md text-gray-600">Monthly Revenue</span>
             <span className="text-xl font-bold text-green-600">
-               <Currency amount={tier.monthlyRevenue} />
+               <Currency amount={tier.monthlyRevenue?tier.monthlyRevenue:0} />
             </span>
          </div>
       </div>
@@ -114,7 +158,7 @@ export default function MembershipPage() {
                <h2 className="text-xl font-semibold text-gray-900 mb-4 sm:mb-0">All Tiers</h2>
                <button 
                   className="flex items-center px-4 py-2 bg-[#FF7A2C] rounded-lg text-white font-medium rounded-lg transition shadow-md"
-                  onClick={setIsModalOpen.bind(null, true)}
+                  onClick={openTierAddModal}
                >
                   <Plus className="w-5 h-5 mr-2" />
                   Create Tier
@@ -155,10 +199,14 @@ export default function MembershipPage() {
                </div>
             )}
          </div>
+
          <MembershipAddPage 
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onSave={addNewMembership}
+            onUpdateTier={handleUpdateTier}
+            mode={modalMode}
+            tier={selectedTier}
          />
       </ProtectedRoute>
    );

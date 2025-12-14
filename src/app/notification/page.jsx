@@ -139,13 +139,9 @@ export default function NotificationPage() {
          <Header title="Notifications" subTitle="System-wide activity and recent events" />
 
          <div className="bg-white rounded-xl p-6 shadow-xl border border-gray-100"> 
-            {/* Updated for light mode */}
-            {/* Header / Controls */}
             <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-               
-               {/* Search Bar */}
                <div className="relative w-full md:w-1/2 mb-4 md:mb-0">
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" /> {/* Updated for light mode */}
+                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" /> 
                   <input
                      type="text"
                      placeholder="Search activity..."
@@ -155,13 +151,12 @@ export default function NotificationPage() {
                   />
                </div>
 
-               {/* Filter Dropdown (Simplified for mock) */}
                <div className="relative w-full md:w-auto">
                   <select
                      value={filter}
                      onChange={(e) => setFilter(e.target.value)}
                      className="w-full md:w-48 p-3 bg-white border border-gray-300 rounded-xl text-gray-900 appearance-none cursor-pointer focus:border-transparent transition shadow-sm"
-               >
+                  >
                      {uniqueTiers.map(template => (
                         <option key={template} value={template}>{template}</option>
                      ))}

@@ -9,8 +9,8 @@ export const formatToReadableDate = (isoString) => {
 
 export const formatToTime = (isoString) => {
    const date = new Date(isoString);
-   const h = String(date.getHours()).padStart(2, "0");
-   const m = String(date.getMinutes()).padStart(2, "0");
+   const h = String(date.getUTCHours()).padStart(2, "0");
+   const m = String(date.getUTCHours()).padStart(2, "0");
    return `${h}:${m}`;
 };
 

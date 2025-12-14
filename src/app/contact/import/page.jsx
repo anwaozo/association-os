@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
-import { FaCircleXmark, FaDownload, FaCheck, FaUpload } from 'react-icons/fa6';
+import { CircleX, Download, Check, Upload } from 'lucide-react';
 
 export default function ContactImportPage({ isOpen, onClose, onBulkImport }) {
    if (!isOpen) return null;
@@ -9,34 +9,6 @@ export default function ContactImportPage({ isOpen, onClose, onBulkImport }) {
    const [parsedData, setParsedData] = useState([]);
    const [isLoading, setIsLoading] = useState(false);
    const fileInputRef = useRef(null);
-
-   const validateForm = (data) => {
-      let newErrors = {};
-      const emailRegex = /\S+@\S+\.\S+/;
-      const phoneRegex = /^[6-9][0-9]{9}$/;
-
-      if (!data.firstName || !data.firstName.trim()) {
-         newErrors.firstName = 'First Name is required.';
-      }
-      if (!data.lastName || !data.lastName.trim()) {
-         newErrors.lastName = 'Last Name is required.';
-      }
-      if (!data.email || !data.email.trim()) {
-         newErrors.email = 'Email is required.';
-      } else if (!emailRegex.test(data.email)) {
-         newErrors.email = 'Please enter a valid email address.';
-      }
-      if (!data.phone || !data.phone.trim()) {
-         newErrors.phone = 'Phone Number is required.';
-      } else if (!phoneRegex.test(data.phone)) {
-         newErrors.phone = 'Please enter a valid phone number.';
-      } else if (data.phone.length !=10) {
-         newErrors.phone = 'Mobile Number must be 10 Digits';
-      }
-
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
-   };
 
    const parseCSV = (csvText) => {
       const lines = csvText.split('\n').filter(line => line.trim() !== '');
@@ -129,7 +101,7 @@ export default function ContactImportPage({ isOpen, onClose, onBulkImport }) {
 
    return (
       <div 
-         className="fixed inset-0 z-50 flex items-center justify-center p-4" 
+         className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4" 
          onClick={(e) => {
                if (e.target.id === 'importModalBackdrop') onClose();
          }}
@@ -145,7 +117,7 @@ export default function ContactImportPage({ isOpen, onClose, onBulkImport }) {
                      <p className="text-gray-500 mt-1">Upload a CSV file to import multiple contacts simultaneously.</p>
                   </div>
                   <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
-                     <FaCircleXmark />
+                     <CircleX />
                   </button>
                </div>
 
@@ -161,7 +133,7 @@ export default function ContactImportPage({ isOpen, onClose, onBulkImport }) {
                      onClick={handleDownloadTemplate}
                      className="flex items-center text-sm px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium border border-gray-300"
                   >
-                     <FaDownload className="w-4 h-4 mr-1" />
+                     <Download className="w-4 h-4 mr-1" />
                      Download Template CSV
                   </button>
                </div>
@@ -181,12 +153,12 @@ export default function ContactImportPage({ isOpen, onClose, onBulkImport }) {
                   
                   {file ? (
                      <div className="flex items-center justify-center text-center text-green-700">
-                           <FaCheck className="w-5 h-5 mr-2" />
+                           <Check className="w-5 h-5 mr-2" />
                            <span className="font-semibold">{file.name}</span>
                      </div>
                   ) : (
                      <div className="text-center">
-                           <FaUpload className="w-10 h-10 mx-auto text-gray-400" />
+                           <Upload className="w-10 h-10 mx-auto text-gray-400" />
                            <p className="mt-2 text-sm text-gray-600">Drag and drop your CSV file here, or <span className="text-orange-600 font-medium">click to browse</span></p>
                            <p className="text-xs text-gray-500 mt-1">Maximum file size: 5MB</p>
                      </div>
@@ -199,12 +171,12 @@ export default function ContactImportPage({ isOpen, onClose, onBulkImport }) {
                      <p className="text-center text-orange-600 font-medium">Processing file... Please wait.</p>
                   ) : parsedData.length > 0 ? (
                      <p className="font-medium text-gray-700 flex items-center">
-                           <FaCheck className="w-4 h-4 text-green-600 mr-1" />
+                           <Check className="w-4 h-4 text-green-600 mr-1" />
                            File ready: <span className="font-bold ml-1 text-green-700">{parsedData.length} contacts</span> found for import.
                      </p>
                   ) : file && !isLoading ? (
                         <p className="font-medium text-gray-700 flex items-center">
-                           <FaCircleXmark className="w-4 h-4 text-red-600 mr-1" />
+                           <CircleX className="w-4 h-4 text-red-600 mr-1" />
                            File selected, but no valid contacts found. Check format.
                      </p>
                   ) : (

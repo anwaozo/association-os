@@ -1,27 +1,145 @@
 'use client';
-import { Fragment } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useRouter } from "next/navigation";
 import Header from '@/app/components/Header';
 import StatsCard from '@/app/components/StatsCard';
+import { useApiClient } from "@/lib/apiClient";
+import ContactAddPage from '@/app/contact/add/page';
+import ContactImportPage from '@/app/contact/import/page';
+import EventAddPage from '@/app/event/add/page';
+import MembershipAddPage from '@/app/membership/add/page';
+import CampaignAddPage from '@/app/campaign/add/page';
+import { useToast } from "@/app/components/toast/ToastContext";
 import { UserPlus, Calendar, Mail, Upload, Layers, DollarSign, ArrowRight, UserCheck, UserX,  TrendingUp } from 'lucide-react';
-
+import { formatToReadableDate, formatToTime, getEventStatus} from '@/app/components/DateTimeFormat';
 
 export default function AdminDashboard() {
+   const api = useApiClient();
+   const router = useRouter();
+   const { showToast } = useToast();
+   const [dashboard, setDashboard] = useState([]);
+   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+   const [isContactImportModalOpen, setIsContactImportModalOpen] = useState(false);
+   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+   const [isTierModalOpen, setIsTierModalOpen] = useState(false);
+   const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
+
+   useEffect(() => {
+      setDashboard([]);
+      fetchDashboard();
+   }, []);
+
+   const fetchDashboard = async () => {
+      const res = await api.get("/dashboard");
+      if (res.data) {
+         setDashboard(res.data);
+      }
+   };
+
+   const openContactAddModal = () => setIsContactModalOpen(true);
+
+   const handleAddContact = async (contactData) => {
+      const newContact = {
+         name: `${contactData.firstName} ${contactData.lastName}`,
+         email: contactData.email,
+         phone: contactData.phone,
+         role: contactData.status
+      };
+
+      try {
+         const res = await api.post("/auth/register", newContact);
+         if(res.status === 200) {
+            showToast(`Contact ${newContact.name} added successfully!`);
+            setIsContactModalOpen(false);
+         } 
+      } catch (err) {
+      }
+   };
+
+   const openContactImportModal = () => setIsContactImportModalOpen(true);
+
+   const handleBulkImport = async (newContacts) => {
+      const currentMaxId = contacts.reduce((max, contact) => Math.max(max, contact.id), 0);
+      let nextId = currentMaxId + 1;
+
+      const formattedNewContacts = newContacts.map(c => ({
+         name: `${c.firstName} ${c.lastName}`,
+         email: c.email,
+         phone: c.phone,
+         role: c.status
+      }));
+
+      try {
+         const res = await api.post("/auth/bulk_register", { users: formattedNewContacts }, {timeout: 0});
+         if(res.status === 200) {
+            showToast(`Contact ${formattedNewContacts.length} contacts imported successfully!`);
+            setIsContactImportModalOpen(false);
+         } 
+      } catch (err) {
+         console.error(err);
+         showToast("Failed to import contacts", "error");
+         return;
+      }
+      
+      setIsImportModalOpen(false);
+
+      setTimeout(() => {
+         setSuccessMessage(null);
+      }, 3000);
+   };
+
+   const openEventAddModal = () => setIsEventModalOpen(true);
+
+   const addNewEvent = async (newEvent) => {
+      try {
+         const res = await api.post("/events", newEvent);
+         showToast("Event created successfully!", "success");
+         setIsEventModalOpen(false);
+      } catch (err) {
+         // Error already handled globally
+      }
+   };
+
+   const openTierAddModal = () => setIsTierModalOpen(true);
+
+   const addNewMembership = async (newMembership) => {
+      try {
+         const res = await api.post("/memberships", newMembership);
+         showToast("Membership created successfully!", "success");
+         setIsTierModalOpen(false);
+      } catch (err) {
+      }
+   };
+
+   const openCampaignAddModal = () => setIsCampaignModalOpen(true);
+
+   const addNewCampaign = async (newCampaign) => {
+      try {
+         const res = await api.post("/campaign", newCampaign);
+         if(res.status === 201) {
+            showToast(`Campaign  added successfully!`);
+            setIsCampaignModalOpen(false);
+         } else {
+            showToast(res.data.message);
+         }
+      } catch (err) {
+      }
+   };
 
    const stats = [
-      { title: 'Active Members', value: 312, color: 'green', icon: <UserCheck size={16}/>, 'info': '93% of total' },
+      { title: 'Active Members', value: dashboard?.members_count ? dashboard?.members_count : 0, color: 'green', icon: <UserCheck size={16}/>, 'info': '93% of total' },
       { title: 'Past Due', value: 28, color: 'red', icon: <UserX size={16} />, 'info': '7% of total' },
-      { title: 'Upcomming Events', value: 8, color: 'violet', icon: <Calendar size={16} />, 'info': 'Next 30 days' },
+      { title: 'Upcomming Events', value: dashboard?.upcoming_count ? dashboard?.upcoming_count : 0, color: 'violet', icon: <Calendar size={16} />, 'info': 'Next 30 days' },
       { title: 'Funds Raised YTD', value: 15, color: 'blue', icon: <TrendingUp size={16} />, 'info': '85% of goal' },
    ];
    
    const actions = [
-      {title: 'Add Member', icon: <UserPlus />},
-      {title: 'Create Event', icon: <Calendar />},
+      {title: 'Add Member', icon: <UserPlus />, click: openContactAddModal},
+      {title: 'Create Event', icon: <Calendar />, click: openEventAddModal},
       {title: 'Send Message', icon: <Mail />},
-      {title: 'Import Contact', icon: <Upload />},
-      {title: 'Create Tier', icon: <Layers />},
-      {title: 'Create Campaign', icon: <DollarSign />},
+      {title: 'Import Contact', icon: <Upload />, click: openContactImportModal},
+      {title: 'Create Tier', icon: <Layers />, click: openTierAddModal},
+      {title: 'Create Campaign', icon: <DollarSign />, click: openCampaignAddModal},
    ];
 
    const upcomingEvents = [
@@ -81,109 +199,147 @@ export default function AdminDashboard() {
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            
-            {/* Upcoming Events List (Takes up 2 columns) */}
             <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="flex justify-between items-center mb-6">
-               <div>
-                  <h3 className="font-semibold text-lg">Upcoming Events</h3>
-                  <p className="text-slate-500 text-sm">Events in the next 30 days</p>
+               <div className="flex justify-between items-center mb-6">
+                  <div>
+                     <h3 className="font-semibold text-lg">Upcoming Events</h3>
+                     <p className="text-slate-500 text-sm">Events in the next 30 days</p>
+                  </div>
+                  <button 
+                     className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900 cursor-pointer"
+                     onClick={() => router.push("/event")}
+                  >
+                     View All <ArrowRight size={16} />
+                  </button>
                </div>
-               <button className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900">
-                  View All <ArrowRight size={16} />
-               </button>
+
+               <div className="space-y-4">
+                  {dashboard?.upcomingEvents?.length > 0 && dashboard?.upcomingEvents.map(upcomingEvent => {
+                     const filledPercent = upcomingEvent?.capacity > 0 ? ((upcomingEvent?._count?.rsvps / upcomingEvent?.capacity) * 100).toFixed(0) : 0;
+                     return (
+                        <div key={upcomingEvent.slug} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                           <div>
+                              <h4 className="font-medium text-slate-900">{upcomingEvent.title}</h4>
+                              <p className="text-slate-500 text-sm">{formatToReadableDate(upcomingEvent.date)}</p>
+                           </div>
+                           <div className="bg-gray-100 px-3 py-1 rounded-md text-right">
+                              <span className="block text-sm font-semibold text-slate-800">{upcomingEvent?._count?.rsvps} / {upcomingEvent.capacity}</span>
+                              <span className="block text-xs text-slate-500">{filledPercent}% full</span>
+                           </div>
+                        </div>
+                     );
+                  })}
+               </div>
             </div>
 
-            <div className="space-y-4">
-               {upcomingEvents.length > 0 && upcomingEvents.map(upcomingEvent => 
-                  <div className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                     <div>
-                     <h4 className="font-medium text-slate-900">{upcomingEvent.name}</h4>
-                     <p className="text-slate-500 text-sm">{upcomingEvent.date}</p>
-                     </div>
-                     <div className="bg-gray-100 px-3 py-1 rounded-md text-right">
-                     <span className="block text-sm font-semibold text-slate-800">{upcomingEvent.count}</span>
-                     <span className="block text-xs text-slate-500">{upcomingEvent.percent}</span>
-                     </div>
-                  </div>
-               )}
-            </div>
-            </div>
-
-            {/* Quick Actions Grid (Takes up 1 column) */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <div className="mb-6">
-               <h3 className="font-semibold text-lg">Quick Actions</h3>
-               <p className="text-slate-500 text-sm">Common tasks and shortcuts</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-               {actions.map(action => 
-                  <button key={action.title} className="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all gap-2 group">
-                  <div className="text-slate-500 group-hover:text-slate-900 transition-colors">
-                  {action.icon}
-                  </div>
-                  <span className="text-xs font-medium text-slate-600 group-hover:text-slate-900">{action.title}</span>
-               </button>
-               )}
-            </div>
+               <div className="mb-6">
+                  <h3 className="font-semibold text-lg">Quick Actions</h3>
+                  <p className="text-slate-500 text-sm">Common tasks and shortcuts</p>
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  {actions.map(action => 
+                  <button 
+                     key={action.title} 
+                     className="flex flex-col items-center justify-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all gap-2 group cursor-pointer"
+                     onClick={action?.click}
+                  >
+                     <div className="text-slate-500 group-hover:text-slate-900 transition-colors">
+                     {action.icon}
+                     </div>
+                     <span className="text-xs font-medium text-slate-600 group-hover:text-slate-900">{action.title}</span>
+                  </button>
+                  )}
+               </div>
             </div>
          </div>
 
          <div className="w-full min-w-0">
-         <div className="grid grid-cols-2 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-               <div className="flex justify-between items-center mb-6">
-                  <div>
-                  <h3 className="font-semibold text-lg">Recent Activity</h3>
-                  <p className="text-slate-500 text-sm">Latest updates from your organization</p>
-                  </div>
-                  <button className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900">
-                  View All <ArrowRight size={16} />
-                  </button>
-               </div>
-
-               <div className="space-y-6">
-                  {activityItems.map((item) => (
-                  <div key={item.title} className="flex gap-4">
-                     <div className="mt-1.5">
-                        <div className="w-2 h-2 bg-slate-800 rounded-full"></div>
-                     </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <div className="flex justify-between items-center mb-6">
                      <div>
-                        <p className="text-sm text-slate-800 font-medium">{item.title}</p>
-                        <p className="text-xs text-slate-400 mt-1">{item.time}</p>
+                     <h3 className="font-semibold text-lg">Recent Activity</h3>
+                     <p className="text-slate-500 text-sm">Latest updates from your organization</p>
                      </div>
+                     <button className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900">
+                     View All <ArrowRight size={16} />
+                     </button>
                   </div>
-                  ))}
-               </div>
-            </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-               <div className="flex justify-between items-center mb-6">
-                  <div>
-                  <h3 className="font-semibold text-lg">Needs Attention</h3>
-                  <p className="text-slate-500 text-sm">Members with outstanding items</p>
+                  <div className="space-y-6">
+                     {activityItems.map((item) => (
+                     <div key={item.title} className="flex gap-4">
+                        <div className="mt-1.5">
+                           <div className="w-2 h-2 bg-slate-800 rounded-full"></div>
+                        </div>
+                        <div>
+                           <p className="text-sm text-slate-800 font-medium">{item.title}</p>
+                           <p className="text-xs text-slate-400 mt-1">{item.time}</p>
+                        </div>
+                     </div>
+                     ))}
                   </div>
-                  <button className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900">
-                  View All Members <ArrowRight size={16} />
-                  </button>
                </div>
 
-               <div className="space-y-3">
-                  {attentionCards.map((card) => (
-                  <div key={card.name} className="flex items-center justify-between p-4 bg-orange-50 border border-orange-100 rounded-lg">
+               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <div className="flex justify-between items-center mb-6">
                      <div>
-                        <h4 className="font-medium text-slate-900 text-sm">{card.name}</h4>
-                        <p className="text-slate-500 text-xs">{card.issue}</p>
+                     <h3 className="font-semibold text-lg">Needs Attention</h3>
+                     <p className="text-slate-500 text-sm">Members with outstanding items</p>
                      </div>
-                     <div className="bg-white px-2 py-1 rounded border border-orange-100 text-xs font-medium text-slate-600 shadow-sm">
-                        {card.badge}
-                     </div>
+                     <button className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900">
+                     View All Members <ArrowRight size={16} />
+                     </button>
                   </div>
-                  ))}
+
+                  <div className="space-y-3">
+                     {attentionCards.map((card) => (
+                     <div key={card.name} className="flex items-center justify-between p-4 bg-orange-50 border border-orange-100 rounded-lg">
+                        <div>
+                           <h4 className="font-medium text-slate-900 text-sm">{card.name}</h4>
+                           <p className="text-slate-500 text-xs">{card.issue}</p>
+                        </div>
+                        <div className="bg-white px-2 py-1 rounded border border-orange-100 text-xs font-medium text-slate-600 shadow-sm">
+                           {card.badge}
+                        </div>
+                     </div>
+                     ))}
+                  </div>
                </div>
             </div>
          </div>
-         </div>
+
+         <ContactAddPage 
+            isOpen={isContactModalOpen}
+            onClose={() => setIsContactModalOpen(false)}
+            onAddContact={handleAddContact}
+         />
+
+         <ContactImportPage 
+            isOpen={isContactImportModalOpen}
+            onClose={() => setIsContactImportModalOpen(false)}
+            onBulkImport={handleBulkImport}
+         />
+
+         <EventAddPage 
+            isOpen={isEventModalOpen}
+            onClose={() => setIsEventModalOpen(false)}
+            onSave={addNewEvent}
+         />
+
+         <MembershipAddPage 
+            isOpen={isTierModalOpen}
+            onClose={() => setIsTierModalOpen(false)}
+            onSave={addNewMembership}
+         />
+
+         <CampaignAddPage 
+            isOpen={isCampaignModalOpen}
+            onClose={() => setIsCampaignModalOpen(false)}
+            onSave={addNewCampaign}
+         />
+
       </div>
    );
 }

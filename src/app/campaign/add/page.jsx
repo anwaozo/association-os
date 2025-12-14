@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { FaCircleXmark } from 'react-icons/fa6';
+import { CircleX } from 'lucide-react';
 import InputField from '@/app/components/forms/InputField';
 import TagInput from '@/app/components/forms/TagInput';
 import ToggleSwitch from '@/app/components/forms/ToggleSwitch';
@@ -56,7 +56,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                      <p className="text-gray-600 text-sm mt-1">Launch a new fundraising initiative for your organization</p>
                   </div>
                   <button onClick={onClose} className="text-gray-600 hover:text-gray-900 transition p-1 rounded-full hover:bg-gray-100">
-                     <FaCircleXmark className="w-6 h-6" />
+                     <CircleX className="w-6 h-6" />
                   </button>
                </div>
 

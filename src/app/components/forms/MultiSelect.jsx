@@ -70,6 +70,7 @@ export default function MultiSelect({
    placeholder = 'Select...',
    searchable = true,
    maxHeight = 200,
+   error
 }) {
    const [open, setOpen] = useState(false);
    const [filter, setFilter] = useState('');
@@ -184,6 +185,7 @@ export default function MultiSelect({
             </ul>
          </DropdownList>
          )}
+         {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
       </div>
    );
 }

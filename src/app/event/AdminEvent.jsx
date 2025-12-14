@@ -2,29 +2,15 @@
 import { Fragment, useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/app/components/Header';
+import Portal from '@/app/components/Portal';
 import StatsCard from '@/app/components/StatsCard';
 import { useToast } from "@/app/components/toast/ToastContext";
 import EventAddPage from '@/app/event/add/page';
 import EventBadge from '@/app/event/EventBadge';
 import { useApiClient } from "@/lib/apiClient";
 import { useSelectedItem } from "@/store/useSelectedItem";
-import { formatToReadableDate, formatToTime, getEventStatus} from '@/app/components/DateTimeFormat';
-import { 
-  Calendar,
-  EllipsisIcon,
-  Clock,
-  Plus,
-  MapPin,
-  MoreVertical,
-  Mail,
-  Phone,
-  Pencil,
-  Send,
-  Trash2,
-  Search,
-  Info,
-  Users
-} from 'lucide-react';
+import { formatToReadableDate, getEventStatus} from '@/app/components/DateTimeFormat';
+import { Calendar, Eye, EllipsisIcon, Clock, Plus, MapPin, Pencil, Send, Trash2, Search, File, Users } from 'lucide-react';
 
 export default function AdminEvent() {
    const api = useApiClient();
@@ -34,6 +20,19 @@ export default function AdminEvent() {
    const [statusFilter, setStatusFilter] = useState('All');
    const { showToast } = useToast();
    const { setItem } = useSelectedItem();
+   const [activeMenuId, setActiveMenuId] = useState(0);
+   const [modalMode, setModalMode] = useState("add");
+   const [selectedEvent, setSelectedEvent] = useState(null);
+
+   const toggleMenu = (id) => {
+      setActiveMenuId(activeMenuId === id ? null : id);
+   };
+
+   const openEventAddModal = () => {
+      setModalMode("add");
+      setSelectedEvent(null);
+      setIsModalOpen(true);
+   };
 
    const addNewEvent = async (newEvent) => {
       try {
@@ -43,7 +42,19 @@ export default function AdminEvent() {
          const list = await api.get("/events");
          setEvents(list.data);
       } catch (err) {
-         // Error already handled globally
+         showToast("Failed to update contact", "error");
+      }
+   };
+
+   const handleUpdateEvent = async (updatedData) => {
+      try {
+         await api.put(`/events/${selectedEvent.id}`, updatedData);
+         showToast("Event updated successfully!", "success");
+         const res = await api.get("/events");
+         setEvents(res.data);
+         setIsModalOpen(false);
+      } catch (err) {
+         showToast("Failed to update event", "error");
       }
    };
 
@@ -169,7 +180,6 @@ export default function AdminEvent() {
       return ["All", ...statuses];  // Add "All" always at top
    }, [events]);
 
-
    const filteredEvents = events.filter(event => {
       const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase());
       const eventStatus = getEventStatus(event.date);
@@ -177,39 +187,77 @@ export default function AdminEvent() {
       return matchesSearch && matchesStatus;
    });
 
-
    const EventCard = ({ event }) => {
       const isFull = event.attendance / event.capacity >= 1;
       const progressColor = isFull ? 'text-red-600' : 'text-green-600';
       const progressBg = isFull ? 'bg-red-100' : 'bg-green-100';
       
       return (
-         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-md flex flex-col justify-between">
+         <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-md flex flex-col justify-between relative">
             <div>
                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center gap-2">
                      <h3 className="text-xl font-bold text-gray-900 mb-2">{event.title}</h3>
                      <EventBadge date={event.date} />
                   </div>
-                  <button className="text-gray-400 hover:text-gray-700 transition p-1">
-                     <Link
-                        href={`event/${event.slug}`}
-                        onClick={() => setItem(event)}
-                        >
+                  <div className="relative">
+                     <button 
+                        type="button"
+                        onClick={(e) => {
+                           e.preventDefault();
+                           e.stopPropagation();
+                           toggleMenu(event.id);
+                        }}
+                        className="text-gray-400 hover:text-gray-700 transition p-1 cursor-pointer"
+                     >
                         <EllipsisIcon />
-                     </Link>
-                  </button>
+                     </button>
+                     {activeMenuId === event.id && (
+                        <div 
+                           className="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-xl  border border-gray-100 z-50 py-1"
+                           onClick={(e) => e.stopPropagation()}
+                        >
+                           <Link
+                              href={`/event/${event.slug}`}
+                              onClick={() => setItem(event)}
+                              className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50"
+                           >
+                              <Eye size={14} /> View Details
+                           </Link>
+                           <button 
+                              className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-gray-50 cursor-pointer"
+                              onClick={() => {
+                                 setModalMode("edit");
+                                 setSelectedEvent(event);
+                                 setIsModalOpen(true);
+                                 setActiveMenuId(null);
+                              }}
+                           >
+                              <Pencil size={14} /> Edit Event
+                           </button>
+                           <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
+                              <File size={14} /> Export RSVP List
+                           </button>
+                           <div className="h-px bg-gray-100 my-1"></div>
+                           <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3">
+                              <Trash2 size={14} /> Cancel Event
+                           </button>
+                        </div>
+                     )}
+                  </div>
                </div>
 
-               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${progressBg} ${progressColor}`}>
-                  {event.rsvps.length} / {event.capacity} attending
-               </span>
-
-               {event.price > 0 && (
-                  <span className="inline-flex items-center text-sm font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full mb-3">
-                     ${event.price}
+               <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${progressBg} ${progressColor}`}>
+                     {event.rsvps.length} / {event.capacity} attending
                   </span>
-               )}
+
+                  {event.price > 0 && (
+                     <span className="inline-flex items-center text-sm font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-full mb-3">
+                        ${event.price}
+                     </span>
+                  )}
+               </div>
                
                <div className="space-y-2 mt-5 text-sm text-gray-700 mb-4">
                   <p className="flex items-center font-medium">
@@ -218,7 +266,7 @@ export default function AdminEvent() {
                   </p>
                   <p className="flex items-center">
                      <Clock className="w-4 h-4 mr-2 text-gray-500" />
-                     {formatToTime(event.start_time)} - {formatToTime(event.end_time)}
+                     {event.start_time} - {event.end_time}
                   </p>
                   <p className="flex items-center">
                      <MapPin className="w-4 h-4 mr-2 text-gray-500" />
@@ -232,8 +280,7 @@ export default function AdminEvent() {
                </p>
             </div>
 
-            {/* Actions */}
-            <div className="flex space-x-3 border-t pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 border-t pt-4">
                <button className="flex-1 flex items-center justify-center px-4 py-2 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition border border-gray-300 text-sm">
                   <Users className="w-4 h-4 mr-1" />
                   View RSVPs
@@ -246,7 +293,6 @@ export default function AdminEvent() {
          </div>
       );
    };
-
 
    return (
       <Fragment>
@@ -263,7 +309,7 @@ export default function AdminEvent() {
                <h2 className="text-lg font-semibold text-gray-800">All Events</h2>
                <button 
                   className="flex items-center gap-2 bg-[#FF7A2C] hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                  onClick={setIsModalOpen.bind(null, true)}
+                  onClick={openEventAddModal}
                >
                   <Plus className="w-4 h-4 mr-1" />
                   Create Event
@@ -314,6 +360,9 @@ export default function AdminEvent() {
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onSave={addNewEvent}
+            onUpdateEvent={handleUpdateEvent}
+            mode={modalMode}
+            event={selectedEvent}
          />
       </Fragment>
    )

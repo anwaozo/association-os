@@ -9,18 +9,7 @@ import DataTable from '@/app/components/DataTable';
 
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 import { useToast } from "@/app/components/toast/ToastContext";
-import { 
-  Download,
-  Plus,
-  Upload,
-  MoreVertical,
-  Mail,
-  Phone,
-  Pencil,
-  Send,
-  Trash2,
-  Search,
-  Info
+import { Download, Plus, Upload, MoreVertical, Mail, Phone, Pencil, Send, Trash2, Search, Info
 } from 'lucide-react';
 
 export default function ContactPage() {
@@ -33,6 +22,8 @@ export default function ContactPage() {
    const [activeMenuId, setActiveMenuId] = useState(0);
    const [searchTerm, setSearchTerm] = useState('');
    const [statusFilter, setStatusFilter] = useState('All');
+   const [modalMode, setModalMode] = useState("add");
+   const [selectedContact, setSelectedContact] = useState(null);
 
    const toggleMenu = (id) => {
       setActiveMenuId(activeMenuId === id ? null : id);
@@ -114,7 +105,11 @@ export default function ContactPage() {
    }, []);
 
    /** Contact Add New Model Start */
-   const openContactAddModal = () => setIsModalOpen(true);
+   const openContactAddModal = () => {
+      setModalMode("add");
+      setSelectedContact(null);
+      setIsModalOpen(true);
+   };
 
    const handleAddContact = async (contactData) => {
       const newContact = {
@@ -135,6 +130,25 @@ export default function ContactPage() {
       } catch (err) {
       }
    };
+
+   const handleUpdateContact = async (updatedData) => {
+      const newContact = {
+         name: `${updatedData.firstName} ${updatedData.lastName}`,
+         email: updatedData.email,
+         phone: updatedData.phone,
+         role: updatedData.status
+      };
+      try {
+         await api.put(`/auth/register/${selectedContact.id}`, newContact);
+         showToast("Contact updated successfully!", "success");
+         const res = await api.get("/contacts");
+         setContacts(res.data);
+         setIsModalOpen(false);
+      } catch (err) {
+         showToast("Failed to update contact", "error");
+      }
+   };
+
    /** Contact Add New Model End */
 
    /** Contact Import Model Start */
@@ -283,7 +297,15 @@ export default function ContactPage() {
 
                            {activeMenuId === contact.id && (
                               <div className="absolute right-12 top-8 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-10 py-1">
-                                 <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
+                                 <button 
+                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3"
+                                    onClick={() => {
+                                       setModalMode("edit");
+                                       setSelectedContact(contact);
+                                       setIsModalOpen(true);
+                                       setActiveMenuId(null);
+                                    }}
+                                 >
                                     <Pencil size={14} /> Edit
                                  </button>
                                  <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
@@ -315,6 +337,9 @@ export default function ContactPage() {
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onAddContact={handleAddContact}
+            onUpdateContact={handleUpdateContact}
+            mode={modalMode}
+            contact={selectedContact}
          />
          <ContactImportPage 
             isOpen={isImportModalOpen}

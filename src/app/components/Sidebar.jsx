@@ -63,15 +63,15 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
             <nav className="space-y-1">
             {menuItems.map((item, i) => {
-               const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+               const isActive = pathname === item.href || pathname.startsWith(item.href + '/') || (item.href === '/fundraising' && pathname.startsWith('/campaign'));
                return (
                   <Link
                      key={i}
                      href={item.href}
                      className={`flex items-center space-x-3 p-1.5 rounded-lg transition-all ${
                         isActive
-                           ? "bg-gray-700 text-white" 
-                           : "text-gray-800 hover:bg-gray-700 hover:text-white"
+                           ? "bg-[#EAEAEA] text-black" 
+                           : "text-gray-800 hover:bg-[#EAEAEA] hover:text-black"
                      }`}
                   >
                      <span className="text-lg">{item.icon}</span>
