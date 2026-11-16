@@ -345,7 +345,7 @@ export default function MembershipDetailPage({ params }) {
          className={`
             px-5 py-3 text-sm font-semibold flex items-center space-x-2 transition-colors duration-150
             ${activeTab === id 
-               ? 'text-[#FF884D] border-b-2 border-[#FF884D]' 
+               ? 'text-[var(--brand)] border-b-2 border-[var(--brand)]' 
                : 'text-gray-500 hover:text-gray-700'
             }
          `}
@@ -428,7 +428,7 @@ export default function MembershipDetailPage({ params }) {
          <div className="space-y-6">
             
             <nav className="flex items-center space-x-2 text-sm text-gray-500 font-medium">
-               <button onClick={onBack} className="flex items-center hover:text-[#FF884D] transition">
+               <button onClick={onBack} className="flex items-center hover:text-[var(--brand)] transition">
                   <FaChevronLeft className="w-4 h-4 mr-0.5" />
                   Membership Tiers
                </button>
@@ -443,7 +443,7 @@ export default function MembershipDetailPage({ params }) {
                   
                {/* Actions */}
                <div className="flex space-x-3">
-                  <button className="flex items-center px-4 py-2 bg-[#FF884D] border border-gray-300 text-white font-medium rounded-xl transition shadow-sm">
+                  <button className="flex items-center px-4 py-2 bg-[var(--brand)] border border-gray-300 text-white font-medium rounded-xl transition shadow-sm">
                      <FaFacebookMessenger className="w-5 h-5 mr-2" />
                      Invite Contact
                   </button>

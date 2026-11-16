@@ -27,7 +27,7 @@ export default function ToggleSwitch ({ enabled, setEnabled, label, description,
          
          <div 
             onClick={() => setEnabled(!enabled)}
-            className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 ${enabled ? 'bg-[#FF884D]' : 'bg-gray-400'}`}
+            className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 ${enabled ? 'bg-[var(--brand)]' : 'bg-gray-400'}`}
          >
             <span
                aria-hidden="true"

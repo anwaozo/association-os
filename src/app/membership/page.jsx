@@ -11,6 +11,16 @@ import ProtectedRoute from '@/app/components/ProtectedRoute';
 import { useSelectedItem } from "@/store/useSelectedItem";
 import { Search, Plus, CheckCircle, User2, EllipsisIcon, Pencil, Send, Trash2, Eye } from 'lucide-react';
 
+// Expected monthly revenue from current members on this tier (annual dues spread over 12 months)
+const monthlyRevenue = (t) => {
+   const members = t?._count?.users || 0;
+   const price = Number(t?.price) || 0;
+   const yearly = ['2', 'Annual'].includes(t?.billing_cadence);
+   return Math.round((yearly ? price / 12 : price) * members);
+};
+
+const cadenceLabel = (c) => ({ '1': 'month', '2': 'year', Monthly: 'month', Annual: 'year' }[c] || c || '');
+
 export default function MembershipPage() {
    const api = useApiClient();
    const { showToast } = useToast();
@@ -64,10 +74,13 @@ export default function MembershipPage() {
       fetchMebersips();
    }, []);
 
+   const tiers = Array.isArray(membership) ? membership : [];
+   const totalMembers = tiers.reduce((sum, t) => sum + (t?._count?.users || 0), 0);
+   const mostPopular = tiers.reduce((best, t) => ((t?._count?.users || 0) > (best?._count?.users || 0) ? t : best), null);
    const stats = [
-      { title: "Total Tiers", value: membership?membership.length:0, color: "indigo" },
-      { title: "Total Members", value: 345, color: "green" },
-      { title: "Most Popular", value: "Professional", color: "yellow" },
+      { title: "Total Tiers", value: tiers.length, color: "indigo" },
+      { title: "Members on a Tier", value: totalMembers, color: "green" },
+      { title: "Most Popular", value: mostPopular?._count?.users ? mostPopular.name : "None yet", color: "yellow" },
    ];
 
    const TierCard = ({ tier }) => (
@@ -76,7 +89,7 @@ export default function MembershipPage() {
             <div>
                <h3 className="text-xl font-bold text-gray-900 mb-1">{tier.name}</h3>
                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-600"><Currency amount={tier.price} /> / {tier.billing_cadence }</span>
+                  <span className="text-sm text-gray-600"><Currency amount={tier.price} /> / {cadenceLabel(tier.billing_cadence)}</span>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">{tier.auto_renewal === true ? 'Autorenew': 'No Autorenew'}</span>
                </div>
             </div>
@@ -131,13 +144,13 @@ export default function MembershipPage() {
 
          <div className="flex items-center text-sm text-gray-600 mb-6">
             <User2 className="w-4 h-4 mr-2 text-indigo-500" />
-            <span>{tier.activeMembers} active members</span>
+            <span>{tier._count?.users ?? 0} active members</span>
          </div>
 
          <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
             <span className="text-md text-gray-600">Monthly Revenue</span>
             <span className="text-xl font-bold text-green-600">
-               <Currency amount={tier.monthlyRevenue?tier.monthlyRevenue:0} />
+               <Currency amount={monthlyRevenue(tier)} />
             </span>
          </div>
       </div>
@@ -157,7 +170,7 @@ export default function MembershipPage() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-gray-200 pb-4">
                <h2 className="text-xl font-semibold text-gray-900 mb-4 sm:mb-0">All Tiers</h2>
                <button 
-                  className="flex items-center px-4 py-2 bg-[#FF7A2C] rounded-lg text-white font-medium rounded-lg transition shadow-md"
+                  className="flex items-center px-4 py-2 bg-[var(--brand)] rounded-lg text-white font-medium rounded-lg transition shadow-md"
                   onClick={openTierAddModal}
                >
                   <Plus className="w-5 h-5 mr-2" />

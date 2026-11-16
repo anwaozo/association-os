@@ -1,5 +1,5 @@
 
-import { Mail, Linkedin, Globe, X, MapPin, Building2} from 'lucide-react';
+import { Phone, Mail, Linkedin, Globe, X, MapPin, Building2} from 'lucide-react';
 
 export default function ProfileModal ({ member, onClose }) {
 
@@ -36,13 +36,13 @@ export default function ProfileModal ({ member, onClose }) {
                </div> 
                <div className="space-y-1">
                   <h2 className="text-xl font-semibold text-gray-900">{member.name}</h2>
-                  <p className="text-sm text-gray-600">{member.title}</p>
+                  <p className="text-sm text-gray-600">{member.membership?.name || (member.role === 2 ? 'Member' : 'Contact')}</p>
                   <div className="flex items-center text-sm text-gray-500">
-                     <Building2 size={14} className="mr-1" /> {member.company}
+                     <Mail size={14} className="mr-1" /> {member.email}
                   </div>
 
                   <div className="flex items-center text-sm text-gray-500">
-                     <MapPin size={14} className="mr-1" /> {member.location}
+                     <Phone size={14} className="mr-1" /> {member.phone}
                   </div>
                </div>
             </div>
@@ -53,37 +53,34 @@ export default function ProfileModal ({ member, onClose }) {
                <p className="text-sm text-gray-700 leading-relaxed">{member.about}</p>
             </div> }
 
+            {member.tags?.length > 0 &&
             <div className="pt-4 border-t border-gray-200 mt-4">
                <h3 className="text-base font-semibold text-gray-800 mb-3">Areas of Expertise</h3>
                <div className="flex flex-wrap gap-2">
-                  {member.tags.map((tag, index) => (
+                  {(member.tags || []).map((tag, index) => (
                      <span key={index} className="px-3 py-1 text-xs font-medium text-primary-orange bg-orange-100 rounded-full border border-orange-200">
                         {tag}
                      </span>
                   ))}
                </div>
             </div>
-            
+            }
+
             <div className="pt-4 border-t border-gray-200 mt-4">
                <h3 className="text-base font-semibold text-gray-800 mb-3">Contact & Links</h3>
                
-               <button className="flex items-center w-full py-2 px-3 mb-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+               <a href={`mailto:${member.email}`} className="flex items-center w-full py-2 px-3 mb-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
                   <Mail className="w-5 h-5 mr-3" /> Send Email
-               </button>
-               
-               {/* LinkedIn Button */}
-               <button className="flex items-center w-full py-2 px-3 mb-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
-                  <Linkedin className="w-5 h-5 mr-3" /> View LinkedIn Profile
-               </button>
-               
-               {/* Website Button */}
-               <button className="flex items-center w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
-                  <Globe className="w-5 h-5 mr-3" /> Visit Website
-               </button>
+               </a>
+               {member.phone && (
+                  <a href={`tel:${member.phone}`} className="flex items-center w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                     <Phone className="w-5 h-5 mr-3" /> Call {member.phone}
+                  </a>
+               )}
             </div>
 
             <p className="text text-gray-500 mt-6">
-               Member since {member.memberSince}
+               Member since {member.createdAt ? new Date(member.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''}
             </p>
          </div>
       </div>

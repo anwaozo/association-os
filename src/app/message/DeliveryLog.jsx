@@ -118,7 +118,7 @@ export default function DeliveryLog({ messages }) {
             </div>
             <Link 
                href="/message/add" 
-               className="flex items-center gap-2 px-4 py-2 bg-[#FF7A2C] text-white rounded-lg transition-colors font-medium shadow-sm">
+               className="flex items-center gap-2 px-4 py-2 bg-[var(--brand)] text-white rounded-lg transition-colors font-medium shadow-sm">
                <Plus size={18} />
                Compose Message
             </Link>

@@ -1,56 +1,34 @@
 'use client';
 import { Fragment, useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
 import Header from '@/app/components/Header';
-import Profile from '@/app/settings/user/Profile';
+import MyProfile from '@/app/settings/MyProfile';
 import Security from '@/app/settings/user/Security';
 import Billing from '@/app/settings/user/Billing';
 import Privacy from '@/app/settings/user/Privacy';
-import { CircleUser, LockKeyhole, Copyright, CreditCard, Lock, Link as LinkIcon } from 'lucide-react';
+import SettingsTabs from '@/app/settings/SettingsTabs';
+import { CircleUser, LockKeyhole, Copyright, CreditCard } from 'lucide-react';
+import { SHOW_PREVIEW } from '@/lib/features';
 
-export default function SettingsPage() {
-   const { user, role, logout } = useAuth();
-   const [isOpen, setIsOpen] = useState(true);
+export default function UserSettings() {
    const [activeTab, setActiveTab] = useState('profile');
-   const isAdmin = user?.role;
 
-   const tabDatas = [
+   const tabs = [
       { id: 'profile', label: 'Profile', icon: CircleUser },
-      { id: 'security', label: 'Security', icon: LockKeyhole },
-      { id: 'billing', label: 'Billing', icon: CreditCard },
-      { id: 'privacy', label: 'Privacy', icon: Copyright },
-   ];
-   
+      SHOW_PREVIEW && { id: 'security', label: 'Security', icon: LockKeyhole },
+      SHOW_PREVIEW && { id: 'billing', label: 'Billing', icon: CreditCard },
+      SHOW_PREVIEW && { id: 'privacy', label: 'Privacy', icon: Copyright },
+   ].filter(Boolean);
+
    return (
       <Fragment>
-         <Header title="Settings" subTitle="Configure membership levels and pricing" />
-
-         {/* Tabs Navigation */}
-         <div className="flex border-b border-gray-200 -mb-px">
-            {tabDatas.map(tab => (
-            <button
-               key={tab.id}
-               onClick={() => setActiveTab(tab.id)}
-               className={`
-                  px-5 py-3 text-sm font-semibold flex items-center space-x-2 transition-colors duration-150
-                  ${activeTab === tab.id 
-                     ? 'text-[#FF884D] border-b-2 border-[#FF884D]' 
-                     : 'text-gray-500 hover:text-gray-700'
-                  }
-               `}
-            >
-               <tab.icon size={16} /><span>{tab.label}</span>
-            </button>
-            ))}
-         </div>
-
-         <div className="tab-content border-b border-gray-200 mb-8">
-            {activeTab === 'profile' && <Profile />}
+         <Header title="Settings" subTitle="Manage your profile and password" />
+         <SettingsTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+         <div className="tab-content">
+            {activeTab === 'profile' && <MyProfile />}
             {activeTab === 'security' && <Security />}
             {activeTab === 'billing' && <Billing />}
             {activeTab === 'privacy' && <Privacy />}
          </div>
-
       </Fragment>
    );
 }

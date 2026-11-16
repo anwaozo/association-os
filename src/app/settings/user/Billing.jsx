@@ -38,7 +38,7 @@ export default function Billing() {
                </div>
             </div>
             <div className="flex gap-3">
-               <button className="px-4 py-2 bg-[#FF7A2C] text-white rounded-lg font-medium">
+               <button className="px-4 py-2 bg-[var(--brand)] text-white rounded-lg font-medium">
                Change Tier
                </button>
                <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm">

@@ -1,5 +1,5 @@
 {
-  "name": "the-friar-society1",
+  "name": "association-os-web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,9 +7,11 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "test:build": "next build"
   },
   "dependencies": {
+    "@fontsource/instrument-sans": "^5.3.0",
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",
     "axios": "^1.13.2",

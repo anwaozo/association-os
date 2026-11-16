@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import ToggleSwitch from '@/app/components/forms/ToggleSwitch';
 import { useSelectedItem } from "@/store/useSelectedItem";
+import { SHOW_PREVIEW } from "@/lib/features";
 import { formatToReadableDate, formatToTime, getEventStatus} from '@/app/components/DateTimeFormat';
 
 export default function EventDetailPage({ params }) {
@@ -362,7 +363,7 @@ export default function EventDetailPage({ params }) {
          className={`
             px-5 py-3 text-sm font-semibold flex items-center space-x-2 transition-colors duration-150
             ${activeTab === id 
-               ? 'text-[#FF884D] border-b-2 border-[#FF884D]' 
+               ? 'text-[var(--brand)] border-b-2 border-[var(--brand)]' 
                : 'text-gray-500 hover:text-gray-700'
             }
          `}
@@ -461,7 +462,7 @@ export default function EventDetailPage({ params }) {
    return (
       <div className="space-y-6">
          <nav className="flex items-center space-x-2 text-sm text-gray-500 font-medium">
-            <button onClick={onBack} className="flex items-center hover:text-[#FF884D] transition">
+            <button onClick={onBack} className="flex items-center hover:text-[var(--brand)] transition">
                <ChevronLeft className="w-4 h-4 mr-0.5" />
                Events
             </button>
@@ -479,10 +480,12 @@ export default function EventDetailPage({ params }) {
                
             {/* Actions */}
             <div className="flex space-x-3">
-               <button className="flex items-center gap-2 px-4 py-2 bg-[#FF7A2C] text-white rounded-lg hover:bg-orange-600 transition-colors font-medium shadow-sm">
+               {SHOW_PREVIEW && (
+               <button className="flex items-center gap-2 px-4 py-2 bg-[var(--brand)] text-white rounded-lg hover:opacity-90 transition-colors font-medium shadow-sm">
                   <Send className="w-5 h-5 mr-2" />
                   Send Announcement
                </button>
+               )}
                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm">
                   <SquarePen className="w-5 h-5 mr-2" />
                   Edit Event

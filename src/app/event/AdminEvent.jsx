@@ -75,65 +75,6 @@ export default function AdminEvent() {
       dashboardMainBg: 'bg-gray-50' 
    };
 
-   const eventLists = [
-      {
-         id: 1,
-         name: "Annual Gala Dinner",
-         slug: "annual-gala-dinner",
-         date: "Oct 15, 2025",
-         time: "7:00 - 9:00",
-         location: "Grand Hall",
-         description: "Join us for our annual celebration with distinguished guests and members.",
-         status: "Upcoming",
-         attendance: 85,
-         capacity: 100,
-         cost: 0,
-         rsvps: 127,
-      },
-      {
-         id: 2,
-         name: "Networking Breakfast",
-         slug: "networking-breakfast",
-         date: "Oct 22, 2025",
-         time: "08:00 - 12:00",
-         location: "Chapter Room",
-         description: "Connect with fellow members over breakfast and coffee.",
-         status: "Upcoming",
-         attendance: 24,
-         capacity: 30,
-         cost: 0,
-         rsvps: 45,
-      },
-      {
-         id: 3,
-         name: "Community Service Day",
-         slug: "community-service-day",
-         date: "Nov 5, 2025",
-         time: "10:00 - 2:00",
-         location: "Local Community Center",
-         description: "Give back to the community alongside your fellow Friars.",
-         status: "Upcoming",
-         attendance: 42,
-         capacity: 50,
-         cost: 0,
-         rsvps: 32,
-      },
-      {
-         id: 4,
-         name: "Leadership Workshop",
-         slug: "leadership-workshop",
-         date: "Nov 12, 2025",
-         time: "2:00 - 4:00",
-         location: "Conference Room A",
-         description: "Develop your leadership skills with industry experts.",
-         status: "Ongoing",
-         attendance: 18,
-         capacity: 25,
-         cost: 25,
-         rsvps: 18,
-      },
-   ];
-
    const stats1 = useMemo(() => {
       if (!events || events.length === 0) {
          return {
@@ -151,13 +92,15 @@ export default function AdminEvent() {
          return status === "Upcoming";
       }).length;
 
-      const totalRSVPs = events.reduce((sum, e) => sum + (e.rsvps.length || 0), 0);
-      const totalCapacity = events.reduce((sum, e) => sum + (e.capacity || 0), 0);
-      const totalAttendance = events.reduce((sum, e) => sum + (e.attendance || 0), 0);
+      const totalRSVPs = events.reduce((sum, e) => sum + (e.rsvps?.length || 0), 0);
+      // Fill rate across events that have a capacity
+      const capped = events.filter(e => e.capacity > 0);
+      const totalCapacity = capped.reduce((sum, e) => sum + e.capacity, 0);
+      const cappedRSVPs = capped.reduce((sum, e) => sum + (e.rsvps?.length || 0), 0);
 
       const avgAttendance =
          totalCapacity > 0
-            ? ((totalAttendance / totalCapacity) * 100).toFixed(0)
+            ? ((cappedRSVPs / totalCapacity) * 100).toFixed(0)
             : "N/A";
 
       return { total, upcoming, totalRSVPs, avgAttendance };
@@ -167,7 +110,7 @@ export default function AdminEvent() {
       { title: "Total Events", value: stats1.total, color: "bg-green-200" },
       { title: "Upcoming Events", value: stats1.upcoming, color: "bg-red-200" },
       { title: "Total RSVPs", value: stats1.totalRSVPs, color: "bg-violet-200" },
-      { title: "Avg. Attendance", value: stats1.avgAttendance + "%", color: "bg-blue-200" },
+      { title: "Avg. Fill Rate", value: stats1.avgAttendance === "N/A" ? "N/A" : stats1.avgAttendance + "%", color: "bg-blue-200" },
    ];
 
    const statusList = useMemo(() => {
@@ -308,7 +251,7 @@ export default function AdminEvent() {
             <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
                <h2 className="text-lg font-semibold text-gray-800">All Events</h2>
                <button 
-                  className="flex items-center gap-2 bg-[#FF7A2C] hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 bg-[var(--brand)] hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                   onClick={openEventAddModal}
                >
                   <Plus className="w-4 h-4 mr-1" />

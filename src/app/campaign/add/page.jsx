@@ -180,7 +180,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                         Cancel
                      </button>
                      <button
-                        className="px-6 py-3 bg-[#FF884D] hover:bg-[#FF7733] text-white font-medium rounded-xl shadow-lg transition duration-150 transform hover:scale-[1.01]"
+                        className="px-6 py-3 bg-[var(--brand)] hover:opacity-90 text-white font-medium rounded-xl shadow-lg transition duration-150 transform hover:scale-[1.01]"
                      >
                         Create Campaign
                      </button>

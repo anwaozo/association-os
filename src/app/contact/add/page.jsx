@@ -172,7 +172,7 @@ export default function ContactAddPage({ isOpen, onClose, onAddContact, onUpdate
 
                {/* Action Buttons */}
                <div className="flex items-center justify-end space-x-3">
-                  <button type="submit" className="px-6 py-2 text-white bg-[#FF7A2C] rounded-lg transition font-medium shadow-md">{mode === "add" ? "Add Contact" : "Update Contact"}</button>
+                  <button type="submit" className="px-6 py-2 text-white bg-[var(--brand)] rounded-lg transition font-medium shadow-md">{mode === "add" ? "Add Contact" : "Update Contact"}</button>
                   <button type="button" onClick={onClose} className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">Cancel</button>
                </div>
             </form>

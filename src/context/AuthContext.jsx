@@ -1,17 +1,20 @@
 'use client';
-import { createContext, useReducer, useContext, useEffect } from 'react';
+import { createContext, useReducer, useContext, useEffect, useCallback } from 'react';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
 
 const initialState = {
-   accessToken: "",
-   refreshToken: "",
+   accessToken: '',
+   refreshToken: '',
    user: null,
+   organization: null,
    isAuthenticated: false,
-   isLoading: true
+   isLoading: true,
 };
+
+const COOKIE_OPTS = { expires: 30, sameSite: 'lax', secure: typeof window !== 'undefined' && window.location.protocol === 'https:' };
 
 function authReducer(state, action) {
    switch (action.type) {
@@ -20,28 +23,29 @@ function authReducer(state, action) {
             ...state,
             accessToken: action.payload.accessToken,
             refreshToken: action.payload.refreshToken,
-            isAuthenticated: true
+            isAuthenticated: true,
          };
-
       case 'SET_USER':
          return { ...state, user: action.payload };
-      
+      case 'SET_ORG':
+         return { ...state, organization: action.payload };
       case 'FINISH_LOADING':
          return { ...state, isLoading: false };
-
       case 'LOGOUT':
-         return {
-            accessToken: "",
-            refreshToken: "",
-            user: null,
-            isAuthenticated: false,
-            isLoading: false
-         };
-
+         return { ...initialState, isLoading: false };
       default:
          return state;
    }
 }
+
+const readJson = (name) => {
+   try {
+      const v = Cookies.get(name);
+      return v ? JSON.parse(v) : null;
+   } catch {
+      return null;
+   }
+};
 
 export function AuthProvider({ children }) {
    const [state, dispatch] = useReducer(authReducer, initialState);
@@ -49,45 +53,61 @@ export function AuthProvider({ children }) {
    useEffect(() => {
       const accessToken = Cookies.get('accessToken');
       const refreshToken = Cookies.get('refreshToken');
-      const userCookie = Cookies.get('user');
-      const user = userCookie ? JSON.parse(userCookie) : null;
+      const user = readJson('user');
+      const organization = readJson('org');
 
       if (accessToken && refreshToken && user) {
          try {
             const decoded = jwtDecode(accessToken);
-            if (decoded.exp * 1000 < Date.now()) {
+            // Sessions from before multi-tenancy have no organization: log out.
+            if (!decoded.organizationId) {
                dispatch({ type: 'LOGOUT' });
             } else {
+               // An expired access token is fine: the API client refreshes it.
                dispatch({ type: 'SET_TOKENS', payload: { accessToken, refreshToken } });
-               dispatch({ type: 'SET_USER', payload:  user  });
+               dispatch({ type: 'SET_USER', payload: user });
+               if (organization) dispatch({ type: 'SET_ORG', payload: organization });
             }
-         } catch (err) {
+         } catch {
             dispatch({ type: 'LOGOUT' });
          }
       }
-      dispatch({ type: "FINISH_LOADING" });
+      dispatch({ type: 'FINISH_LOADING' });
    }, []);
 
-   const setTokens = (accessToken, refreshToken) => {
-      Cookies.set('accessToken', accessToken, { expires: 1 });
-      Cookies.set('refreshToken', refreshToken, { expires: 1 });
+   const setTokens = useCallback((accessToken, refreshToken) => {
+      Cookies.set('accessToken', accessToken, COOKIE_OPTS);
+      Cookies.set('refreshToken', refreshToken, COOKIE_OPTS);
       dispatch({ type: 'SET_TOKENS', payload: { accessToken, refreshToken } });
-   };
+   }, []);
 
-   const setUser = (user) => {
-      Cookies.set('user', JSON.stringify(user), { expires: 1 });
+   const setUser = useCallback((user) => {
+      Cookies.set('user', JSON.stringify(user), COOKIE_OPTS);
       dispatch({ type: 'SET_USER', payload: user });
-   };
+   }, []);
 
-   const logout = () => {
-      Cookies.remove('accessToken');
-      Cookies.remove('refreshToken');
-      Cookies.remove('user');
+   const setOrganization = useCallback((organization) => {
+      Cookies.set('org', JSON.stringify(organization), COOKIE_OPTS);
+      dispatch({ type: 'SET_ORG', payload: organization });
+   }, []);
+
+   const logout = useCallback(() => {
+      const refreshToken = Cookies.get('refreshToken');
+      if (refreshToken && process.env.NEXT_PUBLIC_API_URL) {
+         // Revoke the session server-side; ignore network errors.
+         fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ refreshToken }),
+         }).catch(() => {});
+      }
+      ['accessToken', 'refreshToken', 'user', 'org'].forEach((c) => Cookies.remove(c));
       dispatch({ type: 'LOGOUT' });
-   };
+   }, []);
 
    return (
-      <AuthContext.Provider value={{ state, setTokens, setUser, logout }}>
+      <AuthContext.Provider value={{ state, setTokens, setUser, setOrganization, logout }}>
          {children}
       </AuthContext.Provider>
    );

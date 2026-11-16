@@ -19,7 +19,7 @@ export default function MessagePage() {
          id: 1, 
          notification_type: "Email",
          template: "Blank Message",
-         subject: "Welcome to The Friar Society!",
+         subject: "Welcome to our organization!",
          delivery_log:[
             {label: 'Sent', count: 15},
             {label: 'Delivered', count: 15},
@@ -32,7 +32,7 @@ export default function MessagePage() {
          id: 2, 
          notification_type: "Email",
          template: "Due Receipt",
-         subject: "Welcome to The Friar Society!",
+         subject: "Welcome to our organization!",
          delivery_log:[
             {label: 'Sent', count: 15},
             {label: 'Delivered', count: 15},
@@ -45,7 +45,7 @@ export default function MessagePage() {
          id: 3, 
          notification_type: "Email",
          template: "Welcome Email",
-         subject: "Welcome to The Friar Society!",
+         subject: "Welcome to our organization!",
          delivery_log:[
             {label: 'Sent', count: 15},
             {label: 'Delivered', count: 15},
@@ -58,7 +58,7 @@ export default function MessagePage() {
          id: 4, 
          notification_type: "Email",
          template: "New Event",
-         subject: "Welcome to The Friar Society!",
+         subject: "Welcome to our organization!",
          delivery_log:[
             {label: 'Sent', count: 15},
             {label: 'Delivered', count: 15},
@@ -71,7 +71,7 @@ export default function MessagePage() {
          id: 5, 
          notification_type: "SMS",
          template: "Event Reminder",
-         subject: "Welcome to The Friar Society!",
+         subject: "Welcome to our organization!",
          delivery_log:[
             {label: 'Sent', count: 15},
             {label: 'Delivered', count: 15},
@@ -99,14 +99,14 @@ export default function MessagePage() {
       },
       {
          id: 3,
-         title: 'Welcome To The Friar Society',
+         title: 'Welcome to our organization',
          target: { type: 'group', label: 'New Members' },
          time: '2 days ago',
          stats: { sent: 15, delivered: 15, opened: 12, clicked: 8, failed: 0 },
       },
       {
          id: 4,
-         title: 'Welcome To The Friar Society',
+         title: 'Welcome to our organization',
          target: { type: 'user', label: 'Sarah Johnson' },
          time: '5 days ago',
          stats: { sent: 1, delivered: 1, opened: 1, clicked: 1, failed: 0 },
@@ -150,7 +150,7 @@ export default function MessagePage() {
                className={`
                   px-5 py-3 text-sm font-semibold flex items-center space-x-2 transition-colors duration-150
                   ${activeTab === tab.id 
-                     ? 'text-[#FF884D] border-b-2 border-[#FF884D]' 
+                     ? 'text-[var(--brand)] border-b-2 border-[var(--brand)]' 
                      : 'text-gray-500 hover:text-gray-700'
                   }
                `}

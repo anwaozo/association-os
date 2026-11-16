@@ -78,7 +78,7 @@ export default function MembershipAddPage({ isOpen, onClose, onSave, onUpdateTie
                   <div className="flex justify-between items-start border-b border-gray-200 pb-4 mb-6">
                      <div>
                         <h2 className="text-2xl font-bold text-gray-900"> {mode === "edit" ? "Edit Membership Tier" : "Create Membership Tier"}</h2>
-                        <p className="text-gray-600 text-sm mt-1">Define a new membership level for your society</p>
+                        <p className="text-gray-600 text-sm mt-1">Define a new membership level for your organization</p>
                      </div>
                      <button onClick={onClose} className="text-gray-600 hover:text-gray-900 transition p-1 rounded-full hover:bg-gray-100">
                         <CircleX className="w-6 h-6" />
@@ -148,7 +148,7 @@ export default function MembershipAddPage({ isOpen, onClose, onSave, onUpdateTie
                            Cancel
                         </button>
                         <button
-                           className="px-4 py-2 bg-[#FF7A2C] rounded-lg text-white font-medium rounded-lg transition shadow-md cursor-pointer"
+                           className="px-4 py-2 bg-[var(--brand)] rounded-lg text-white font-medium rounded-lg transition shadow-md cursor-pointer"
                         >
                            {mode === "edit" ? "Update Tier" : "Create Tier"}
                         </button>

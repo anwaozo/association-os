@@ -5,6 +5,7 @@ import StatsCard from '@/app/components/StatsCard';
 import ContactAddPage from '@/app/contact/add/page';
 import ContactImportPage from '@/app/contact/import/page';
 import { useApiClient } from "@/lib/apiClient";
+import { importInChunks } from "@/lib/importInChunks";
 import DataTable from '@/app/components/DataTable';
 
 import ProtectedRoute from '@/app/components/ProtectedRoute';
@@ -29,11 +30,12 @@ export default function ContactPage() {
       setActiveMenuId(activeMenuId === id ? null : id);
    };
 
+   const memberCount = contacts.filter((c) => c.role === 2).length;
    const stats = [
-      { title: 'Total Contacts', value: contacts.length, color: 'bg-green-200'},
-      { title: 'Active Members', value: 28, color: 'bg-red-200'},
-      { title: 'Past Due', value: 8, color: 'bg-violet-200'},
-      { title: 'Prospects', value: 15, color: 'bg-blue-200'},
+      { title: 'Total People', value: contacts.length, color: 'bg-green-200'},
+      { title: 'Members', value: memberCount, color: 'bg-red-200'},
+      { title: 'With a Tier', value: contacts.filter((c) => c.membership).length, color: 'bg-violet-200'},
+      { title: 'Contacts / Prospects', value: contacts.length - memberCount, color: 'bg-blue-200'},
    ];
 
    const columns = [
@@ -120,14 +122,13 @@ export default function ContactPage() {
       };
 
       try {
-         const res = await api.post("/auth/register", newContact);
-         if(res.status === 200) {
-            showToast(`Contact ${newContact.name} added successfully!`);
-            setIsModalOpen(false);
-            const list = await api.get("/contacts");
-            setContacts(list.data);
-         } 
+         await api.post("/auth/register", newContact);
+         showToast(`Contact ${newContact.name} added successfully!`);
+         setIsModalOpen(false);
+         const list = await api.get("/contacts");
+         setContacts(list.data);
       } catch (err) {
+         // Error toast shown by the API client
       }
    };
 
@@ -145,7 +146,7 @@ export default function ContactPage() {
          setContacts(res.data);
          setIsModalOpen(false);
       } catch (err) {
-         showToast("Failed to update contact", "error");
+         // Error toast shown by the API client
       }
    };
 
@@ -155,35 +156,23 @@ export default function ContactPage() {
    const openContactImportModal = () => setIsImportModalOpen(true);
 
    const handleBulkImport = async (newContacts) => {
-      const currentMaxId = contacts.reduce((max, contact) => Math.max(max, contact.id), 0);
-      let nextId = currentMaxId + 1;
-
       const formattedNewContacts = newContacts.map(c => ({
-         name: `${c.firstName} ${c.lastName}`,
+         name: `${c.firstName} ${c.lastName}`.trim(),
          email: c.email,
          phone: c.phone,
          role: c.status
       }));
 
       try {
-         const res = await api.post("/auth/bulk_register", { users: formattedNewContacts }, {timeout: 0});
-         if(res.status === 200) {
-            showToast(`Contact ${formattedNewContacts.length} contacts imported successfully!`);
-            setIsModalOpen(false);
-            const list = await api.get("/contacts");
-            setContacts(list.data);
-         } 
+         const imported = await importInChunks(api, formattedNewContacts);
+         const skipped = formattedNewContacts.length - imported;
+         showToast(`${imported} contacts imported${skipped ? ` (${skipped} skipped as duplicates)` : ''}`);
+         setIsImportModalOpen(false);
+         const list = await api.get("/contacts");
+         setContacts(list.data);
       } catch (err) {
-         console.error(err);
-         showToast("Failed to import contacts", "error");
-         return;
+         // Error toast shown by the API client
       }
-      
-      setIsImportModalOpen(false);
-
-      setTimeout(() => {
-         setSuccessMessage(null);
-      }, 3000);
    };
    /** Contact Import Model End */
 
@@ -213,7 +202,7 @@ export default function ContactPage() {
                </div>
 
                <div className="flex gap-3">
-                  <button className="flex items-center gap-2 bg-[#FF7A2C] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" onClick={openContactAddModal}>
+                  <button className="flex items-center gap-2 bg-[var(--brand)] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors" onClick={openContactAddModal}>
                      <Plus className="mr-1" /> Add Contact
                   </button>
                      
@@ -281,11 +270,11 @@ export default function ContactPage() {
                            </div>
                         </td>
                         <td className="px-6 py-4">
-                           <span className="inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-700">
+                           <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${contact.role === 2 ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                               {contact.role === 2 ? 'Member': 'Contact'}
                            </span>
                         </td>
-                        <td className="px-6 py-4">{contact.membershipId ? contact?.membership?.name: ''}</td>
+                        <td className="px-6 py-4">{contact?.membership?.name || ''}</td>
                         <td className="px-6 py-4">{formatToReadableDate(contact.createdAt)}</td>
                         <td className="px-6 py-4 text-right relative">
                            <button 

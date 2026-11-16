@@ -4,8 +4,10 @@ import InputField from '@/app/components/forms/InputField';
 import { FaEnvelope } from 'react-icons/fa';
 import { FaMessage } from 'react-icons/fa6';
 import { Mail} from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Notification() {
+   const { state } = useAuth();
 
    const [enableSMS, setEnableSMS] = useState(false);
 
@@ -22,13 +24,13 @@ export default function Notification() {
             <div className="space-y-4">
                <InputField label="Email Service" value="Postmark" />
                <InputField label="API Key" value="************" type="password" />
-               <InputField label="From Email Address" value="noreply@friarsociety.org" readOnly={true} />
-               <InputField label="From Name" value="The Friar Society" />
+               <InputField label="From Email Address" value="noreply@associationos.app" readOnly={true} />
+               <InputField label="From Name" defaultValue={state?.organization?.name || ""} />
             </div>
 
             {/* Save Changes Button */}
             <div className="flex justify-end mt-6 pt-4 border-t border-gray-100">
-               <button className="bg-[#FF7A2C] text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors">
+               <button className="bg-[var(--brand)] text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors">
                   Save Changes
                </button>
             </div>
@@ -62,7 +64,7 @@ export default function Notification() {
 
             {/* Save Changes Button */}
             <div className="flex justify-end pt-4">
-               <button className="bg-[#FF7A2C] text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors">
+               <button className="bg-[var(--brand)] text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors">
                   Save Changes
                </button>
             </div>

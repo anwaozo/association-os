@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AssociationOS web app
 
-## Getting Started
+Next.js 16 frontend for AssociationOS. Each organization gets its own branded workspace
+(name, logo, brand color) after login; the API keeps every organization's data separate.
 
-First, run the development server:
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local      # point NEXT_PUBLIC_API_URL at the API
+npm install
+npm run dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Demo logins come from the API seed (`npm run db:seed` in association-os-api), for example
+`admin@bayoucitychamber.org` and `admin@lonestarpros.org` (password `Demo@2026!` unless
+`SEED_PASSWORD` was set).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+A branded login page for one organization: `/login?org=<slug>`, e.g. `/login?org=bayou-city-chamber`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## What's live vs preview
 
-## Learn More
+Live (real API data): login, dashboards (admin and member), contacts and members (add, edit,
+CSV import), events and RSVPs, membership tiers, campaigns, member directory, organization
+branding settings, my profile and password.
 
-To learn more about Next.js, take a look at the following resources:
+Preview (sample data, hidden unless `NEXT_PUBLIC_SHOW_PREVIEW_FEATURES=true`): Messages,
+Notifications, the Fundraising overview, payment and notification settings, member billing,
+security and privacy tabs, news and announcements.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Netlify:** new site from this repo. Set `NEXT_PUBLIC_API_URL` (the API site's URL plus `/api`)
+and `NEXT_PUBLIC_SHOW_PREVIEW_FEATURES=false`, then deploy. Add this site's URL to the API's
+`CORS_ORIGINS`.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Docker (AWS / Mac Studio):**
+`docker build --build-arg NEXT_PUBLIC_API_URL=https://api.example.com/api -t associationos-web .`

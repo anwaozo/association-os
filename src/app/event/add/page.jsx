@@ -211,7 +211,7 @@ export default function EventAddPage({ isOpen, onClose, onSave, onUpdateEvent, m
                      Cancel
                   </button>
                   <button
-                     className="px-4 py-2 bg-[#FF7A2C] rounded-lg text-white font-medium rounded-lg transition shadow-md cursor-pointer"
+                     className="px-4 py-2 bg-[var(--brand)] rounded-lg text-white font-medium rounded-lg transition shadow-md cursor-pointer"
                   >
                      {mode === "edit" ? "Update Event" : "Create Event"}
                   </button>

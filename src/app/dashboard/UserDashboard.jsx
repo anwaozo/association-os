@@ -6,6 +6,9 @@ import Header from '@/app/components/Header';
 import { ArrowRight, Calendar, CreditCard, CircleCheck } from 'lucide-react';
 import { useApiClient } from "@/lib/apiClient";
 import Currency from '@/app/components/Currency';
+import { SHOW_PREVIEW } from '@/lib/features';
+import { greeting } from '@/lib/time';
+import { useAuth } from '@/context/AuthContext';
 
 const AnnouncementItem = ({ title, content, postDate }) => (
   <div className="py-4 border-b border-gray-200 last:border-b-0">
@@ -20,7 +23,8 @@ const AnnouncementItem = ({ title, content, postDate }) => (
 
 export default function UserDashboard() {
    const api = useApiClient();
-   const [dashboard, setDashboard] = useState([]);
+   const { state } = useAuth();
+   const [dashboard, setDashboard] = useState({});
    const [loading, setLoading] = useState(true);
    const [showMembershipModal, setShowMembershipModal] = useState(false);
 
@@ -50,7 +54,7 @@ export default function UserDashboard() {
 
    return (
       <Fragment>
-         <Header title={`Good Morning, ${dashboard?.name}`} subTitle="Here's what's happening with your membership." />
+         <Header title={`${greeting()}, ${(dashboard?.name || state?.user?.name || '').split(' ')[0]}`} subTitle={`Here's what's happening with your ${state?.organization?.name || ''} membership.`} />
 
          {/* 2. Dashboard Content Grid */}
          <div className="container mx-auto">
@@ -121,7 +125,7 @@ export default function UserDashboard() {
                      <div key={rsvp?.event?.title} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-100 rounded-lg hover:border-gray-200 transition-colors">
                         <div className="mb-2 sm:mb-0">
                            <h4 className="font-medium text-slate-900">{rsvp?.event?.title}</h4>
-                           <p className="text-sm text-slate-500 mt-0.5">{formatToReadableDate(rsvp?.createdAt)}</p>
+                           <p className="text-sm text-slate-500 mt-0.5">{formatToReadableDate(rsvp?.event?.date)}</p>
                         </div>
                         <div className="flex items-center text-xs font-medium text-[#166534] bg-[#dcfce7] px-3 py-1.5 rounded-full">
                            <CircleCheck size={14} className="mr-1.5" /> In Calendar
@@ -134,6 +138,7 @@ export default function UserDashboard() {
                </div>
             </div>
 
+            {SHOW_PREVIEW && (
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm lg:col-span-3 p-6">
               <h3 className="font-medium text-slate-800 mb-6">News & Announcements</h3>
                <div className="space-y-8">
@@ -154,6 +159,7 @@ export default function UserDashboard() {
                   />
                </div>
             </div>
+            )}
          </div>
 
          {showMembershipModal && (
@@ -163,7 +169,7 @@ export default function UserDashboard() {
                   Select a Membership
                   </h3>
 
-                  {dashboard?.memberships.map((m) => {
+                  {(dashboard?.memberships || []).map((m) => {
                      const isActive = dashboard?.membership?.id === m.id;
 
                      return (
@@ -181,7 +187,7 @@ export default function UserDashboard() {
                         >
                            <p className="font-medium text-slate-800">{m.name}</p>
                            <p className="text-sm text-slate-500 capitalize">
-                              {m.billing_cadence == 1 ? 'Monthly': 'Annual'} — <Currency amount={m.price} />
+                              {(m.billing_cadence == 1 || m.billing_cadence === 'Monthly') ? 'Monthly' : 'Annual'} — <Currency amount={m.price} />
                            </p>
                         </button>
                      );

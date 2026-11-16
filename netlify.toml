@@ -1,0 +1,10 @@
+# AssociationOS web app on Netlify (Next.js runtime is detected automatically).
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Set in the Netlify UI (Site settings > Environment variables):
+  #   NEXT_PUBLIC_API_URL                 e.g. https://associationos-api.netlify.app/api
+  #   NEXT_PUBLIC_SHOW_PREVIEW_FEATURES   "false" for client demos

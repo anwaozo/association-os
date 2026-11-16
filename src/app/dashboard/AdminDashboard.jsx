@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Header from '@/app/components/Header';
 import StatsCard from '@/app/components/StatsCard';
 import { useApiClient } from "@/lib/apiClient";
+import { importInChunks } from '@/lib/importInChunks';
 import ContactAddPage from '@/app/contact/add/page';
 import ContactImportPage from '@/app/contact/import/page';
 import EventAddPage from '@/app/event/add/page';
@@ -12,12 +13,15 @@ import CampaignAddPage from '@/app/campaign/add/page';
 import { useToast } from "@/app/components/toast/ToastContext";
 import { UserPlus, Calendar, Mail, Upload, Layers, DollarSign, ArrowRight, UserCheck, UserX,  TrendingUp } from 'lucide-react';
 import { formatToReadableDate, formatToTime, getEventStatus} from '@/app/components/DateTimeFormat';
+import { useAuth } from '@/context/AuthContext';
+import { greeting, timeAgo, daysUntil } from '@/lib/time';
 
 export default function AdminDashboard() {
    const api = useApiClient();
    const router = useRouter();
    const { showToast } = useToast();
-   const [dashboard, setDashboard] = useState([]);
+   const { state } = useAuth();
+   const [dashboard, setDashboard] = useState({});
    const [isContactModalOpen, setIsContactModalOpen] = useState(false);
    const [isContactImportModalOpen, setIsContactImportModalOpen] = useState(false);
    const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -25,8 +29,8 @@ export default function AdminDashboard() {
    const [isCampaignModalOpen, setIsCampaignModalOpen] = useState(false);
 
    useEffect(() => {
-      setDashboard([]);
       fetchDashboard();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
    }, []);
 
    const fetchDashboard = async () => {
@@ -47,54 +51,43 @@ export default function AdminDashboard() {
       };
 
       try {
-         const res = await api.post("/auth/register", newContact);
-         if(res.status === 200) {
-            showToast(`Contact ${newContact.name} added successfully!`);
-            setIsContactModalOpen(false);
-         } 
+         await api.post("/auth/register", newContact);
+         showToast(`Contact ${newContact.name} added successfully!`);
+         setIsContactModalOpen(false);
+         fetchDashboard();
       } catch (err) {
+         // Error toast shown by the API client
       }
    };
 
    const openContactImportModal = () => setIsContactImportModalOpen(true);
 
    const handleBulkImport = async (newContacts) => {
-      const currentMaxId = contacts.reduce((max, contact) => Math.max(max, contact.id), 0);
-      let nextId = currentMaxId + 1;
-
       const formattedNewContacts = newContacts.map(c => ({
-         name: `${c.firstName} ${c.lastName}`,
+         name: `${c.firstName} ${c.lastName}`.trim(),
          email: c.email,
          phone: c.phone,
          role: c.status
       }));
 
       try {
-         const res = await api.post("/auth/bulk_register", { users: formattedNewContacts }, {timeout: 0});
-         if(res.status === 200) {
-            showToast(`Contact ${formattedNewContacts.length} contacts imported successfully!`);
-            setIsContactImportModalOpen(false);
-         } 
+         const imported = await importInChunks(api, formattedNewContacts);
+         showToast(`${imported} contacts imported successfully!`);
+         setIsContactImportModalOpen(false);
+         fetchDashboard();
       } catch (err) {
-         console.error(err);
-         showToast("Failed to import contacts", "error");
-         return;
+         // Error toast shown by the API client
       }
-      
-      setIsImportModalOpen(false);
-
-      setTimeout(() => {
-         setSuccessMessage(null);
-      }, 3000);
    };
 
    const openEventAddModal = () => setIsEventModalOpen(true);
 
    const addNewEvent = async (newEvent) => {
       try {
-         const res = await api.post("/events", newEvent);
+         await api.post("/events", newEvent);
          showToast("Event created successfully!", "success");
          setIsEventModalOpen(false);
+         fetchDashboard();
       } catch (err) {
          // Error already handled globally
       }
@@ -115,82 +108,37 @@ export default function AdminDashboard() {
 
    const addNewCampaign = async (newCampaign) => {
       try {
-         const res = await api.post("/campaign", newCampaign);
-         if(res.status === 201) {
-            showToast(`Campaign  added successfully!`);
-            setIsCampaignModalOpen(false);
-         } else {
-            showToast(res.data.message);
-         }
+         await api.post("/campaign", newCampaign);
+         showToast(`Campaign added successfully!`);
+         setIsCampaignModalOpen(false);
+         fetchDashboard();
       } catch (err) {
       }
    };
 
    const stats = [
-      { title: 'Active Members', value: dashboard?.members_count ? dashboard?.members_count : 0, color: 'green', icon: <UserCheck size={16}/>, 'info': '93% of total' },
-      { title: 'Past Due', value: 28, color: 'red', icon: <UserX size={16} />, 'info': '7% of total' },
-      { title: 'Upcomming Events', value: dashboard?.upcoming_count ? dashboard?.upcoming_count : 0, color: 'violet', icon: <Calendar size={16} />, 'info': 'Next 30 days' },
-      { title: 'Funds Raised YTD', value: 15, color: 'blue', icon: <TrendingUp size={16} />, 'info': '85% of goal' },
+      { title: 'Active Members', value: dashboard?.members_count ?? 0, color: 'green', icon: <UserCheck size={16}/>, info: `${dashboard?.contacts_count ?? 0} contacts` },
+      { title: 'Renewals Due', value: dashboard?.expiring_count ?? 0, color: 'red', icon: <UserX size={16} />, info: 'Next 30 days' },
+      { title: 'Upcoming Events', value: dashboard?.upcoming_count ?? 0, color: 'violet', icon: <Calendar size={16} />, info: 'Scheduled' },
+      { title: 'Active Campaigns', value: dashboard?.campaigns_count ?? 0, color: 'blue', icon: <TrendingUp size={16} />, info: `$${Number(dashboard?.campaign_goal_total || 0).toLocaleString()} in goals` },
    ];
-   
+
    const actions = [
       {title: 'Add Member', icon: <UserPlus />, click: openContactAddModal},
       {title: 'Create Event', icon: <Calendar />, click: openEventAddModal},
-      {title: 'Send Message', icon: <Mail />},
-      {title: 'Import Contact', icon: <Upload />, click: openContactImportModal},
+      {title: 'Import Contacts', icon: <Upload />, click: openContactImportModal},
       {title: 'Create Tier', icon: <Layers />, click: openTierAddModal},
       {title: 'Create Campaign', icon: <DollarSign />, click: openCampaignAddModal},
+      {title: 'View Members', icon: <UserCheck />, click: () => router.push('/contact')},
    ];
 
-   const upcomingEvents = [
-      {
-         name:"Annual Gala Dinner",
-         date:"Nov 15, 2025",
-         count:"127/150", 
-         percent:"85% full"
-      },
-      {
-         name:"Networking Mixer",
-         date:"Nov 22, 2025",
-         count:"45/75", 
-         percent:"60% full"
-      },
-      {
-         name:"Holiday Charity Drive",
-         date:"Dec 10, 2025",
-         count:"32/100", 
-         percent:"32% full"
-      }
-   ];
-
-   const activityItems = [
-      {
-         title:"New member joined: Sarah Thompson",
-         time:"2 hours ago" 
-      },
-      {
-         title:"Payment received: Michael Chen - $100",
-         time:"5 hours ago" 
-      },
-      {
-         title:"New event RSVP: Emily Rodriguez for Annual Gala",
-         time:"1 day ago" 
-      },
-      {
-         title:"Donation received: Anonymous - $500",
-         time:"2 days ago" 
-      }
-   ];
-
-   const attentionCards = [
-      { name:"John Anderson", issue:"Payment past due", badge:"5d"},
-      { name:"Sarah Mitchell", issue:"Payment past due", badge:"3d"},
-      { name:"David Chen", issue:"Membership expiring soon", badge:"7d"}
-   ];
+   const activityItems = dashboard?.recentActivity || [];
+   const attentionCards = dashboard?.expiringSoon || [];
+   const firstName = (state?.user?.name || '').split(' ')[0] || 'there';
 
    return (
       <div className="relative z-10">
-         <Header title="Good Morning, Admin" subTitle="Welcome back! Here's what's happening in The Friar Society." />
+         <Header title={`${greeting()}, ${firstName}`} subTitle={`Here's what's happening at ${state?.organization?.name || 'your organization'}.`} />
 
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {stats.map(item => (
@@ -203,7 +151,7 @@ export default function AdminDashboard() {
                <div className="flex justify-between items-center mb-6">
                   <div>
                      <h3 className="font-semibold text-lg">Upcoming Events</h3>
-                     <p className="text-slate-500 text-sm">Events in the next 30 days</p>
+                     <p className="text-slate-500 text-sm">Next events on the calendar</p>
                   </div>
                   <button 
                      className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900 cursor-pointer"
@@ -214,6 +162,9 @@ export default function AdminDashboard() {
                </div>
 
                <div className="space-y-4">
+                  {!(dashboard?.upcomingEvents?.length > 0) && (
+                     <p className="text-sm text-slate-500">No upcoming events yet. Use Create Event to add one.</p>
+                  )}
                   {dashboard?.upcomingEvents?.length > 0 && dashboard?.upcomingEvents.map(upcomingEvent => {
                      const filledPercent = upcomingEvent?.capacity > 0 ? ((upcomingEvent?._count?.rsvps / upcomingEvent?.capacity) * 100).toFixed(0) : 0;
                      return (
@@ -223,8 +174,8 @@ export default function AdminDashboard() {
                               <p className="text-slate-500 text-sm">{formatToReadableDate(upcomingEvent.date)}</p>
                            </div>
                            <div className="bg-gray-100 px-3 py-1 rounded-md text-right">
-                              <span className="block text-sm font-semibold text-slate-800">{upcomingEvent?._count?.rsvps} / {upcomingEvent.capacity}</span>
-                              <span className="block text-xs text-slate-500">{filledPercent}% full</span>
+                              <span className="block text-sm font-semibold text-slate-800">{upcomingEvent?._count?.rsvps}{upcomingEvent.capacity ? ` / ${upcomingEvent.capacity}` : ''} RSVPs</span>
+                              <span className="block text-xs text-slate-500">{upcomingEvent.capacity ? `${filledPercent}% full` : 'No cap'}</span>
                            </div>
                         </div>
                      );
@@ -262,20 +213,18 @@ export default function AdminDashboard() {
                      <h3 className="font-semibold text-lg">Recent Activity</h3>
                      <p className="text-slate-500 text-sm">Latest updates from your organization</p>
                      </div>
-                     <button className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900">
-                     View All <ArrowRight size={16} />
-                     </button>
                   </div>
 
                   <div className="space-y-6">
-                     {activityItems.map((item) => (
-                     <div key={item.title} className="flex gap-4">
+                     {activityItems.length === 0 && <p className="text-sm text-slate-500">No activity yet.</p>}
+                     {activityItems.map((item, i) => (
+                     <div key={`${item.type}-${i}`} className="flex gap-4">
                         <div className="mt-1.5">
-                           <div className="w-2 h-2 bg-slate-800 rounded-full"></div>
+                           <div className="w-2 h-2 bg-[var(--brand)] rounded-full"></div>
                         </div>
                         <div>
                            <p className="text-sm text-slate-800 font-medium">{item.title}</p>
-                           <p className="text-xs text-slate-400 mt-1">{item.time}</p>
+                           <p className="text-xs text-slate-400 mt-1">{timeAgo(item.at)}</p>
                         </div>
                      </div>
                      ))}
@@ -286,22 +235,23 @@ export default function AdminDashboard() {
                   <div className="flex justify-between items-center mb-6">
                      <div>
                      <h3 className="font-semibold text-lg">Needs Attention</h3>
-                     <p className="text-slate-500 text-sm">Members with outstanding items</p>
+                     <p className="text-slate-500 text-sm">Memberships renewing in the next 30 days</p>
                      </div>
-                     <button className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900">
+                     <button onClick={() => router.push('/contact')} className="text-sm font-medium text-slate-600 flex items-center gap-1 hover:text-slate-900 cursor-pointer">
                      View All Members <ArrowRight size={16} />
                      </button>
                   </div>
 
                   <div className="space-y-3">
+                     {attentionCards.length === 0 && <p className="text-sm text-slate-500">No renewals due in the next 30 days.</p>}
                      {attentionCards.map((card) => (
-                     <div key={card.name} className="flex items-center justify-between p-4 bg-orange-50 border border-orange-100 rounded-lg">
+                     <div key={card.id} className="flex items-center justify-between p-4 bg-orange-50 border border-orange-100 rounded-lg">
                         <div>
-                           <h4 className="font-medium text-slate-900 text-sm">{card.name}</h4>
-                           <p className="text-slate-500 text-xs">{card.issue}</p>
+                           <h4 className="font-medium text-slate-900 text-sm">{card.user?.name || card.user?.email}</h4>
+                           <p className="text-slate-500 text-xs">{card.membership?.name} renews {formatToReadableDate(card.endDate)}</p>
                         </div>
                         <div className="bg-white px-2 py-1 rounded border border-orange-100 text-xs font-medium text-slate-600 shadow-sm">
-                           {card.badge}
+                           {daysUntil(card.endDate)}d
                         </div>
                      </div>
                      ))}

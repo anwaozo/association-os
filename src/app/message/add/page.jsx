@@ -147,7 +147,7 @@ export default function MessageAddPage() {
       <ProtectedRoute>
          <div className="space-y-6">
             <nav className="flex items-center space-x-2 text-sm text-black-500 font-medium">
-               <button onClick={onBack} className="flex items-center hover:text-[#FF884D] transition">
+               <button onClick={onBack} className="flex items-center hover:text-[var(--brand)] transition">
                   <Mail className="w-5 h-4 mr-1" /> Messages
                </button>
                <span><ChevronLeft /></span>
@@ -282,7 +282,7 @@ export default function MessageAddPage() {
                         </button>
                      </div>
                      <div className="flex items-center justify-end space-x-3">
-                        <button type="submit" onClick={send_now} className="px-6 py-2 text-white bg-[#FF7A2C] rounded-lg transition font-medium shadow-md">Send Now</button>
+                        <button type="submit" onClick={send_now} className="px-6 py-2 text-white bg-[var(--brand)] rounded-lg transition font-medium shadow-md">Send Now</button>
                         <button type="button" onClick={save_template} className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">Save as template</button>
                      </div>
                   </div>

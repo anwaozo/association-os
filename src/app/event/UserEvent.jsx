@@ -36,7 +36,7 @@ export default function UserEvent() {
 
    return (
       <Fragment>
-         <Header title="Events" subTitle="Browse and RSVP to society events" />
+         <Header title="Events" subTitle="Browse and RSVP to upcoming events" />
 
          <div className="flex border-b border-gray-200 -mb-px">
             {tabDatas.map(tab => (
@@ -46,7 +46,7 @@ export default function UserEvent() {
                className={`
                   px-5 py-3 text-sm font-semibold flex items-center space-x-2 transition-colors duration-150
                   ${activeTab === tab.id 
-                     ? 'text-[#FF884D] border-b-2 border-[#FF884D]' 
+                     ? 'text-[var(--brand)] border-b-2 border-[var(--brand)]' 
                      : 'text-gray-500 hover:text-gray-700'
                   }
                `}
