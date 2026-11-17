@@ -123,6 +123,9 @@ export default function LoginPage() {
                            ) : 'Log in'}
                         </button>
                      </form>
+                     <p className="text-sm text-gray-600 text-center mt-6">
+                        New organization? <a href="/signup" className="font-medium text-[var(--brand)] hover:underline">Register here</a>
+                     </p>
                   </div>
                </div>
             </div>

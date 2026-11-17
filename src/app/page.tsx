@@ -26,9 +26,14 @@ export default function Home() {
                      Members, events, dues and campaigns in one place, so your staff spends less time on spreadsheets
                      and more time serving members.
                   </p>
-                  <Link href="/login" className="inline-flex items-center px-7 py-3 text-base font-medium rounded-lg text-white bg-[#1F3864] hover:opacity-90">
-                     Log in to your organization
-                  </Link>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                     <Link href="/signup" className="inline-flex items-center justify-center px-7 py-3 text-base font-medium rounded-lg text-white bg-[#1F3864] hover:opacity-90">
+                        Register your organization
+                     </Link>
+                     <Link href="/login" className="inline-flex items-center justify-center px-7 py-3 text-base font-medium rounded-lg text-[#1F3864] border border-[#1F3864] hover:bg-[#EEF2F8]">
+                        Log in
+                     </Link>
+                  </div>
                </div>
             </section>
 

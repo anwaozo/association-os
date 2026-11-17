@@ -41,6 +41,15 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       // eslint-disable-next-line react-hooks/exhaustive-deps
    }, [state?.isAuthenticated]);
 
+   // Admins of a brand-new organization finish the welcome setup first.
+   useEffect(() => {
+      const org = state?.organization;
+      if (state?.isAuthenticated && state?.user?.role === 1 && org && org.onboardedAt === null
+         && !pathname.startsWith("/welcome") && !pathname.startsWith("/invite")) {
+         router.replace("/welcome");
+      }
+   }, [state?.isAuthenticated, state?.user, state?.organization, pathname, router]);
+
    // Screens that still use sample data are off unless preview is enabled.
    const isPreviewRoute = PREVIEW_ROUTES.some((r) => pathname.startsWith(r));
    useEffect(() => {
@@ -57,7 +66,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       "/fundraising",
       "/campaign",
       "/notification",
-      "/message"
+      "/message",
+      "/platform"
    ];
 
    const showSidebar = routesWithSidebar.some((r) => pathname.startsWith(r));

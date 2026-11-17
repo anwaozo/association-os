@@ -13,7 +13,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  Mail
+  Mail,
+  ShieldCheck
 } from 'lucide-react';
 import OrgBadge from '@/app/components/OrgBadge';
 import { SHOW_PREVIEW } from '@/lib/features';
@@ -45,7 +46,10 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       { name: 'Settings', icon: <Settings size={18} />, href: '/settings' },
    ];
 
-   const menuItems = user?.role === 1 ? adminItems : (user?.role === 2 || user?.role === 3 ? memberItems : []);
+   const baseItems = user?.role === 1 ? adminItems : (user?.role === 2 || user?.role === 3 ? memberItems : []);
+   const menuItems = user?.isPlatformAdmin
+      ? [{ name: 'Platform Console', icon: <ShieldCheck size={18} />, href: '/platform' }, ...baseItems]
+      : baseItems;
 
    return (
       <aside
