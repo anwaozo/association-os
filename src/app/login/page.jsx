@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useState, useEffect, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
-import Header from '@/app/header';
+import { PublicShell } from '@/app/header';
 import OrgBadge from '@/app/components/OrgBadge';
 import { PRODUCT_NAME } from '@/lib/features';
 
@@ -52,22 +52,21 @@ export default function LoginPage() {
    };
 
    return (
-      <Fragment>
-         <Header />
-         <div className="pt-20 min-h-screen bg-gray-100">
+      <PublicShell>
+         <div>
             <div className="flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
                <div className="max-w-md w-full space-y-5 text-center">
                   {org && (
                      <div className="flex justify-center"><OrgBadge org={org} size={56} /></div>
                   )}
-                  <h1 className="text-2xl font-bold text-gray-900">
+                  <h1 className="text-3xl font-bold text-[#0F1215] md:text-4xl">
                      {org ? `Welcome back to ${org.name}` : `Log in to ${PRODUCT_NAME}`}
                   </h1>
                   <p className="text-md text-gray-600 mb-8">
                      Members and staff use the same login. You&apos;ll land in your organization&apos;s workspace.
                   </p>
 
-                  <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200 text-left">
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#E4E4EF] text-left">
                      <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
@@ -116,7 +115,7 @@ export default function LoginPage() {
                         <button
                            type="submit"
                            disabled={loading}
-                           className="w-full flex justify-center py-2.5 px-4 text-base font-medium rounded-lg text-white bg-[var(--brand)] hover:opacity-90 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand)]"
+                           className={`w-full flex justify-center py-3 px-4 text-base font-medium rounded-full text-white hover:opacity-90 disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-offset-2 ${org ? 'bg-[var(--brand)] focus:ring-[var(--brand)]' : 'bg-[#1A1B1F] focus:ring-[#1A1B1F]'}`}
                         >
                            {loading ? (
                               <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -124,12 +123,12 @@ export default function LoginPage() {
                         </button>
                      </form>
                      <p className="text-sm text-gray-600 text-center mt-6">
-                        New organization? <a href="/signup" className="font-medium text-[var(--brand)] hover:underline">Register here</a>
+                        New organization? <a href="/signup" className="font-medium text-[#6460FF] hover:underline">Register here</a>
                      </p>
                   </div>
                </div>
             </div>
          </div>
-      </Fragment>
+      </PublicShell>
    );
 }

@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from 'next/link';
+import Header from '@/app/header';
 
 // Public landing page. Mirrors apperr.com/associationos (same copy, colors,
 // type and imagery), with the buttons wired into this app: register an
@@ -7,7 +8,6 @@ import Link from 'next/link';
 
 const CDN = 'https://cdn.prod.website-files.com/674c57b8bc8863cb7e9c6a4b';
 const DEMO_URL = 'https://apperr.com/book-a-demo';
-const SALES_MAIL = 'mailto:info@apperr.com?subject=To%20Apperr%20Sales%20Team';
 const PARTNER_MAIL = 'mailto:info@apperr.com?subject=Partnering%20with%20Apperr%20-%20AssociationOS';
 
 const features = [
@@ -87,19 +87,7 @@ export default function Home() {
 
          {/* Nav + hero */}
          <section className="bg-[#F4F4FF]">
-            <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
-               <Link href="/" className="flex items-center gap-3" aria-label="AssociationOS home">
-                  <img src={`${CDN}/6909d78f697140a651fa2f61_ApperrDesigns_Icon_White_RGB-1.png`} alt="Apperr" className="h-9 w-auto" />
-                  <span className="hidden text-lg font-bold sm:inline">AssociationOS</span>
-               </Link>
-               <div className="flex items-center gap-4 sm:gap-6">
-                  <a href={SALES_MAIL} className="hidden font-bold text-[#1A1B1F] hover:underline md:inline">Talk to Sales</a>
-                  <Link href="/login" className="font-bold text-[#1A1B1F] hover:underline">Log in</Link>
-                  <Link href="/signup" className="rounded-full bg-[#1A1B1F] px-4 py-2.5 text-sm font-medium text-white hover:bg-black sm:px-5">
-                     Register
-                  </Link>
-               </div>
-            </nav>
+            <Header />
 
             <div className="mx-auto max-w-5xl px-4 pb-0 pt-14 text-center sm:px-6 md:pt-20">
                <h1 className="text-[34px] leading-[1.15] sm:text-5xl md:text-[56px]">

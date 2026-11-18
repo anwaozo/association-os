@@ -1,5 +1,6 @@
 'use client';
 import { SHOW_PREVIEW } from '@/lib/features';
+import { downloadCsv, fileSafe, isoDay } from '@/lib/csv';
 import { Fragment, useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/app/components/Header';
@@ -179,11 +180,19 @@ export default function AdminEvent() {
                            >
                               <Pencil size={14} /> Edit Event
                            </button>
-                           {SHOW_PREVIEW && (
-                           <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
+                           <button
+                              onClick={() => {
+                                 downloadCsv(`${fileSafe(event.title)}-rsvps.csv`, [
+                                    { header: 'Name', value: (r) => r.user?.name },
+                                    { header: 'Email', value: (r) => r.user?.email },
+                                    { header: 'RSVP Date', value: (r) => isoDay(r.createdAt) },
+                                 ], event.rsvps || []);
+                                 setActiveMenuId(null);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3"
+                           >
                               <File size={14} /> Export RSVP List
                            </button>
-                           )}
                            {SHOW_PREVIEW && <div className="h-px bg-gray-100 my-1"></div>}
                            {SHOW_PREVIEW && (
                            <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3">

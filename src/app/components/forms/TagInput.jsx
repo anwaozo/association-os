@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 
-export default function TagInput({ name, placeholder = "Type and press Enter..." }) {
-   const [tags, setTags] = useState([]);
+export default function TagInput({ name, placeholder = "Type and press Enter...", initial = [] }) {
+   const [tags, setTags] = useState(() => (Array.isArray(initial) ? initial.map(String) : []));
    const [inputValue, setInputValue] = useState("");
 
    const addTag = (value) => {

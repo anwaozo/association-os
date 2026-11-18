@@ -1,5 +1,6 @@
 'use client';
 import { SHOW_PREVIEW } from '@/lib/features';
+import { downloadCsv, isoDay } from '@/lib/csv';
 import { useState, useEffect } from 'react';
 import Header from '@/app/components/Header';
 import StatsCard from '@/app/components/StatsCard';
@@ -232,11 +233,19 @@ export default function ContactPage() {
                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                   </button>
                      
-                  {SHOW_PREVIEW && (
-                  <button className="flex items-center gap-2 border border-gray-300 text-slate-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
+                  <button
+                     onClick={() => downloadCsv('contacts.csv', [
+                        { header: 'Name', value: (c) => c.name },
+                        { header: 'Email', value: (c) => c.email },
+                        { header: 'Phone', value: (c) => c.phone },
+                        { header: 'Status', value: (c) => (c.role === 2 ? 'Member' : 'Contact') },
+                        { header: 'Tier', value: (c) => c.membership?.name },
+                        { header: 'Join Date', value: (c) => isoDay(c.createdAt) },
+                     ], filteredContacts)}
+                     className="flex items-center gap-2 border border-gray-300 text-slate-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+                  >
                      <Download size={16} />Download
                   </button>
-                  )}
                </div>
             </div>
 

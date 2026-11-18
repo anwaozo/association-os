@@ -2,7 +2,7 @@
 import { Fragment, useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle2 } from 'lucide-react';
-import Header from '@/app/header';
+import { PublicShell } from '@/app/header';
 import { useApiClient } from '@/lib/apiClient';
 import { PRODUCT_NAME } from '@/lib/features';
 
@@ -33,26 +33,25 @@ export default function SignupPage() {
    };
 
    return (
-      <Fragment>
-         <Header />
-         <div className="pt-20 min-h-screen bg-gray-100">
+      <PublicShell>
+         <div>
             <div className="max-w-lg mx-auto py-14 px-4">
                {done ? (
-                  <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200 text-center">
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#E4E4EF] text-center">
                      <CheckCircle2 className="mx-auto text-green-600 mb-4" size={48} />
                      <h1 className="text-2xl font-bold text-gray-900 mb-2">Application received</h1>
                      <p className="text-gray-600 mb-6">
-                        Thanks! We&apos;ll review your organization and email {form.contactEmail} a private link to set up your account.
+                        Thanks! We&apos;ll review your organization and send a private link to {form.contactEmail} so you can set up your account.
                      </p>
-                     <Link href="/" className="text-sm font-medium text-[#1F3864] hover:underline">Back to home</Link>
+                     <Link href="/" className="text-sm font-medium text-[#6460FF] hover:underline">Back to home</Link>
                   </div>
                ) : (
                   <>
-                     <h1 className="text-2xl font-bold text-gray-900 text-center">Register your organization</h1>
+                     <h1 className="text-3xl font-bold text-[#0F1215] text-center md:text-4xl">Register your organization</h1>
                      <p className="text-gray-600 text-center mt-2 mb-8">
                         Tell us about your chamber, association or nonprofit. We&apos;ll review it and send you a link to get started on {PRODUCT_NAME}.
                      </p>
-                     <form onSubmit={submit} className="bg-white p-8 rounded-xl shadow-lg border border-gray-200 space-y-5">
+                     <form onSubmit={submit} className="bg-white p-8 rounded-2xl shadow-sm border border-[#E4E4EF] space-y-5">
                         <div>
                            <label htmlFor="organizationName" className="block text-sm font-medium text-gray-700 mb-1">Organization name</label>
                            <input id="organizationName" name="organizationName" value={form.organizationName} onChange={set} required maxLength={120} className={field} placeholder="Greater Houston Business Chamber" />
@@ -81,17 +80,17 @@ export default function SignupPage() {
 
                         {error && <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
 
-                        <button type="submit" disabled={loading} className="w-full py-2.5 px-4 text-base font-medium rounded-lg text-white bg-[#1F3864] hover:opacity-90 disabled:opacity-60">
+                        <button type="submit" disabled={loading} className="w-full py-3 px-4 text-base font-medium rounded-full text-white bg-[#1A1B1F] hover:bg-black disabled:opacity-60">
                            {loading ? 'Submitting...' : 'Submit application'}
                         </button>
                         <p className="text-sm text-gray-600 text-center">
-                           Already have an account? <Link href="/login" className="font-medium text-[#1F3864] hover:underline">Log in</Link>
+                           Already have an account? <Link href="/login" className="font-medium text-[#6460FF] hover:underline">Log in</Link>
                         </p>
                      </form>
                   </>
                )}
             </div>
          </div>
-      </Fragment>
+      </PublicShell>
    );
 }

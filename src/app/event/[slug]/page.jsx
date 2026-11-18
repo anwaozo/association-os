@@ -17,13 +17,20 @@ import {
 } from 'lucide-react';
 import ToggleSwitch from '@/app/components/forms/ToggleSwitch';
 import { useSelectedItem } from "@/store/useSelectedItem";
+import { useApiClient } from "@/lib/apiClient";
+import { useToast } from "@/app/components/toast/ToastContext";
+import EventAddPage from '@/app/event/add/page';
+import { downloadCsv, fileSafe, isoDay } from '@/lib/csv';
 import { SHOW_PREVIEW } from "@/lib/features";
 import { formatToReadableDate, formatToTime, getEventStatus} from '@/app/components/DateTimeFormat';
 
 export default function EventDetailPage({ params }) {
    const [isOpen, setIsOpen] = useState(true);
-   const { item, clearItem } = useSelectedItem();
+   const { item, setItem, clearItem } = useSelectedItem();
    const router = useRouter();
+   const api = useApiClient();
+   const { showToast } = useToast();
+   const [isEditOpen, setIsEditOpen] = useState(false);
    if (!params) {
       return <div>Loading or Event not found...</div>;
    }
@@ -31,7 +38,7 @@ export default function EventDetailPage({ params }) {
 
    useEffect(() => {
       if (!item) {
-         router.replace("/membership"); // redirect back to list
+         router.replace("/event"); // redirect back to the events list
       }
    }, [item]);
 
@@ -84,34 +91,49 @@ export default function EventDetailPage({ params }) {
       );
    };
 
-   const EventSettingsTab = ({ event, onSaveSettings, onDeleteEvent }) => {
-      // State for local changes before saving
-      const [enableRSVP, setEnableRSVP] = useState(event.enableRSVP);
-      const [remindersEnabled, setRemindersEnabled] = useState(event.remindersEnabled);
-      const [reminderDays, setReminderDays] = useState(event.reminderDays);
-      const [isPublic, setIsPublic] = useState(event.isPublic);
+   // Full payload for PUT /events/:id (the API validates the whole event).
+   const eventPayload = (ev, overrides = {}) => ({
+      title: ev.title,
+      date: isoDay(ev.date),
+      start_time: ev.start_time,
+      end_time: ev.end_time,
+      location: ev.location,
+      capacity: ev.capacity,
+      price: ev.price,
+      description: ev.description,
+      isRSVP: ev.isRSVP !== false,
+      isPublic: Boolean(ev.isPublic),
+      ...overrides,
+   });
 
-      // Check if any setting has changed from the initial event state
-      const settingsChanged = 
-         enableRSVP !== event.enableRSVP || 
-         remindersEnabled !== event.remindersEnabled ||
-         (remindersEnabled && reminderDays !== event.reminderDays) || // Only check reminderDays if reminders are active
-         isPublic !== event.isPublic;
+   // Saves an edit and keeps the page in sync with what the API returned.
+   const saveEvent = async (data) => {
+      try {
+         const res = await api.put(`/events/${item.id}`, data);
+         setItem({ ...item, ...res.data });
+         showToast("Event updated successfully!", "success");
+         return true;
+      } catch (err) {
+         showToast("Failed to update event", "error");
+         return false;
+      }
+   };
 
-      // Placeholder save function
-      const handleSave = () => {
-         const newSettings = { enableRSVP, remindersEnabled, reminderDays, isPublic };
-         console.log(`Saving settings for event ${event.id}:`, newSettings);
-         onSaveSettings(newSettings); // Pass up the changes
+   const EventSettingsTab = () => {
+      const [enableRSVP, setEnableRSVP] = useState(item?.isRSVP !== false);
+      const [isPublic, setIsPublic] = useState(Boolean(item?.isPublic));
+      const [saving, setSaving] = useState(false);
+      const settingsChanged = enableRSVP !== (item?.isRSVP !== false) || isPublic !== Boolean(item?.isPublic);
+
+      const handleSave = async () => {
+         setSaving(true);
+         await saveEvent(eventPayload(item, { isRSVP: enableRSVP, isPublic }));
+         setSaving(false);
       };
-
 
       return (
          <div className="mt-4 space-y-6">
-            {/* --- Settings Card (Matching the uploaded image) --- */}
             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-gray-200">
-               
-               {/* 1. RSVP Enabled Toggle */}
                <div className="pb-6 border-b border-gray-100">
                   <ToggleSwitch
                      label="RSVP Enabled"
@@ -120,31 +142,7 @@ export default function EventDetailPage({ params }) {
                      setEnabled={setEnableRSVP}
                   />
                </div>
-
-               {/* 2. Send Reminders Toggle + Dropdown */}
                <div className="pb-6 border-b border-gray-100">
-                  <ToggleSwitch
-                     label="Send Reminders"
-                     description="Automatically remind attendees before the event"
-                     enabled={remindersEnabled}
-                     setEnabled={setRemindersEnabled}
-                     input="select"
-                     data={<ReminderDropdown
-                        selectedValue={reminderDays}
-                        onChange={setReminderDays}
-                     />}
-                  />
-                  {/*remindersEnabled && (
-                     <ReminderDropdown
-                        selectedValue={reminderDays}
-                        onChange={setReminderDays}
-                     />
-                  )*/}
-               </div>
-
-
-               {/* 3. Public Event Toggle */}
-               <div className="pb-8 border-b border-gray-100">
                   <ToggleSwitch
                      label="Public Event"
                      description="Show this event on the public landing page"
@@ -152,31 +150,13 @@ export default function EventDetailPage({ params }) {
                      setEnabled={setIsPublic}
                   />
                </div>
-
-               {/* Show a message if settings were changed and not saved (for the sake of the demo flow) */}
-               {settingsChanged && (
-                  <div className="flex justify-end pt-4">
-                     <button
-                        onClick={handleSave}
-                        className="px-6 py-2 text-sm font-semibold rounded-xl text-white bg-green-500 hover:bg-green-600 transition"
-                     >
-                        Apply & Save Changes
-                     </button>
-                  </div>
-               )}
-
-
-               {/* 4. Cancel Event Button (Matches the design) */}
-               <div className="pt-8">
+               <div className="flex justify-end pt-4">
                   <button
-                     onClick={() => {
-                        // In a real app, this would trigger a confirmation modal (not alert())
-                        handleDeleteEvent(event.id); 
-                     }}
-                     className="flex items-center justify-center w-full sm:w-auto px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl shadow-lg transition duration-150"
+                     onClick={handleSave}
+                     disabled={!settingsChanged || saving}
+                     className="px-6 py-2 text-sm font-semibold rounded-xl text-white bg-[var(--brand)] hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                     <FaCircleXmark className="w-5 h-5 mr-2" />
-                     Cancel Event
+                     {saving ? 'Saving…' : 'Save Changes'}
                   </button>
                </div>
             </div>
@@ -250,12 +230,14 @@ export default function EventDetailPage({ params }) {
                
                {/* Actions */}
                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                  {SHOW_PREVIEW && (
                   <button 
                      onClick={() => setIsMenuOpen(!isMenuOpen)} 
                      className="text-gray-400 hover:text-gray-800 p-1 rounded-full hover:bg-gray-100 transition"
                   >
                      <FaEllipsisV className="w-5 h-5" />
                   </button>
+                  )}
                   
                   {isMenuOpen && (
                      <div className="absolute right-8 top-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-10">
@@ -277,12 +259,17 @@ export default function EventDetailPage({ params }) {
             <div className="mb-6">
                <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-bold text-gray-900">All RSVPs</h3>
-                  {SHOW_PREVIEW && (
-                  <button className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-800 font-medium rounded-xl hover:bg-gray-100 transition shadow-sm">
+                  <button
+                     onClick={() => downloadCsv(`${fileSafe(item?.title)}-rsvps.csv`, [
+                        { header: 'Name', value: (r) => r.user?.name },
+                        { header: 'Email', value: (r) => r.user?.email },
+                        { header: 'RSVP Date', value: (r) => isoDay(r.createdAt) },
+                     ], filteredRsvps)}
+                     className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-800 font-medium rounded-xl hover:bg-gray-100 transition shadow-sm"
+                  >
                         <FileDown className="w-5 h-5 mr-2" />
                         Download List
                   </button>
-                  )}
                </div>
                <p className="text-sm text-gray-600 mb-4">
                   <span className="font-semibold text-gray-900">{filteredRsvps.length}</span> Members / <span className="font-semibold text-gray-900">{totalGuests?totalGuests:0}</span> Guests
@@ -384,17 +371,6 @@ export default function EventDetailPage({ params }) {
       window.history.back();
    }
 
-   const onDeleteEvent = () => {
-      console.log(`Deleting event ${event.id}`);
-   }
-
-   const handleSaveSettings = (eventId, newSettings) => {
-      setEvents(prevEvents => prevEvents.map(event => 
-         event.id === eventId ? { ...event, ...newSettings } : event
-      ));
-      console.log(`Settings updated for ${eventId}:`, newSettings);
-   };
-
    // --- Event Details Tab Content ---
    const EventDetailsTab = () => (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
@@ -449,13 +425,9 @@ export default function EventDetailPage({ params }) {
          case 'details':
             return <EventDetailsTab />;
          case 'rsvps':
-            return <EventRsvpsTab rsvps={item.rsvps} />;
+            return <EventRsvpsTab rsvps={item.rsvps || []} />;
          case 'settings':
-            return <EventSettingsTab 
-               event={event} 
-               onSaveSettings={(newSettings) => handleSaveSettings(event.id, newSettings)} 
-               onDeleteEvent={onDeleteEvent}
-            />
+            return <EventSettingsTab />;
          default:
             return null;
       }
@@ -488,12 +460,14 @@ export default function EventDetailPage({ params }) {
                   Send Announcement
                </button>
                )}
-               {SHOW_PREVIEW && (
-               <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm">
+               <button
+                  onClick={() => setIsEditOpen(true)}
+                  disabled={!item}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm"
+               >
                   <SquarePen className="w-5 h-5 mr-2" />
                   Edit Event
                </button>
-               )}
             </div>
          </div>
          
@@ -505,7 +479,15 @@ export default function EventDetailPage({ params }) {
          </div>
 
          {/* Tab Content */}
-         {renderTabContent()}
+         {item && renderTabContent()}
+
+         <EventAddPage
+            isOpen={isEditOpen}
+            onClose={() => setIsEditOpen(false)}
+            onUpdateEvent={async (data) => { if (await saveEvent(data)) setIsEditOpen(false); }}
+            mode="edit"
+            event={item}
+         />
 
       </div>
    );

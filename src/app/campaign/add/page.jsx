@@ -5,14 +5,19 @@ import InputField from '@/app/components/forms/InputField';
 import TagInput from '@/app/components/forms/TagInput';
 import ToggleSwitch from '@/app/components/forms/ToggleSwitch';
 
-export default function CampaignAddPage({ isOpen, onClose, onSave }) {
-   if (!isOpen) return null;
+// mode "edit" pre-fills the form from `campaign`. The parent remounts this
+// component (via key) each time it opens, so the starting values are fresh.
+export default function CampaignAddPage({ isOpen, onClose, onSave, onUpdate, mode = "add", campaign = null }) {
+   const editing = mode === "edit" && campaign;
    const [errors, setErrors] = useState({});
-   const [isCustomAmount, setIsCustomAmount] = useState(true);
-   const [isPublic, setIsPublic] = useState(false);
-   const [isAnonymous, setIsAnonymous] = useState(false);
-   const [isEmailNotifiy, setIsEmailNotifiy] = useState(false);
-   const [isRecurring, setIsRecurring] = useState(false);
+   const [isCustomAmount, setIsCustomAmount] = useState(editing ? Boolean(campaign.isCustomAmount) : true);
+   const [isPublic, setIsPublic] = useState(editing ? Boolean(campaign.isPublic) : false);
+   const [isAnonymous, setIsAnonymous] = useState(editing ? Boolean(campaign.isAnonymous) : false);
+   const [isEmailNotifiy, setIsEmailNotifiy] = useState(editing ? Boolean(campaign.isEmailNotifiy) : false);
+   const [isRecurring, setIsRecurring] = useState(editing ? Boolean(campaign.isRecurring) : false);
+   if (!isOpen) return null;
+   const v = (field) => (editing && campaign[field] !== null && campaign[field] !== undefined ? String(campaign[field]) : undefined);
+   const dateValue = editing && campaign.date ? String(campaign.date).slice(0, 10) : undefined;
 
    const validateForm = (data) => {
       let newErrors = {};
@@ -42,8 +47,12 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
          campaignData.isAnonymous = isAnonymous;
          campaignData.isEmailNotifiy = isEmailNotifiy;
          campaignData.isRecurring = isRecurring;
-         onSave(campaignData); 
-         e.target.reset();
+         if (editing) {
+            onUpdate(campaignData);
+         } else {
+            onSave(campaignData);
+            e.target.reset();
+         }
       }
    };
 
@@ -52,8 +61,8 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl p-6 md:p-8 transform transition-all duration-300 scale-100 opacity-100 border border-gray-200">
                <div className="flex justify-between items-start border-b border-gray-200 pb-4 mb-6">
                   <div>
-                     <h2 className="text-2xl font-bold text-gray-900">Create New Campaign</h2>
-                     <p className="text-gray-600 text-sm mt-1">Launch a new fundraising initiative for your organization</p>
+                     <h2 className="text-2xl font-bold text-gray-900">{editing ? "Edit Campaign" : "Create New Campaign"}</h2>
+                     <p className="text-gray-600 text-sm mt-1">{editing ? "Update this fundraising campaign" : "Launch a new fundraising initiative for your organization"}</p>
                   </div>
                   <button onClick={onClose} className="text-gray-600 hover:text-gray-900 transition p-1 rounded-full hover:bg-gray-100">
                      <CircleX className="w-6 h-6" />
@@ -67,6 +76,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                      <InputField
                         label="Campaign Name"
                         name="name"
+                        defaultValue={v("name")}
                         type="text"
                         placeholder="e.g., Annual Fund"
                         error={errors?.name}
@@ -77,6 +87,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                         <InputField
                            label="Fundraising Goal ($)"
                            name="goal"
+                           defaultValue={v("goal")}
                            type="number"
                            placeholder="eg., $12500"
                            error={errors?.goal}
@@ -85,6 +96,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                         <InputField
                            label="End Date"
                            name="date"
+                           defaultValue={dateValue}
                            type="date"
                            placeholder=""
                            error={errors?.end_date}
@@ -93,12 +105,13 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                      </div>
 
                      <label>Suggested Donation Amounts</label>
-                     <TagInput name="donation_amount" placeholder="Add a tag and press Enter" />
+                     <TagInput name="donation_amount" placeholder="Add a tag and press Enter" initial={editing ? campaign.donation_amount : []} />
 
                      <div className="grid grid-cols-2 gap-4">
                         <InputField
                            label="Capacity"
                            name="capacity"
+                           defaultValue={v("capacity")}
                            type="number"
                            placeholder=""
                            error={errors?.capacity}
@@ -107,6 +120,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                         <InputField
                            label="Price (Optional)"
                            name="price"
+                           defaultValue={v("price")}
                            type="number"
                            placeholder=""
                            error={errors?.price}
@@ -117,6 +131,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                      <InputField
                         label="Campaign Description"
                         name="description"
+                        defaultValue={v("description")}
                         type="textarea"
                         placeholder="Describe the purpose and impact of this campaign..."
                         error={errors?.description}
@@ -162,6 +177,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                      <InputField
                         label="Thank You Message"
                         name="thank_you"
+                        defaultValue={v("thank_you")}
                         type="textarea"
                         placeholder="Describe the purpose and impact of this campaign..."
                         error={errors?.thank_you_message}
@@ -173,6 +189,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                   {/* Footer Buttons: Changed border-gray-700 to border-gray-200, Cancel button updated */}
                   <div className="mt-8 flex justify-end space-x-4 pt-4 border-t border-gray-200">
                      <button
+                        type="button"
                         onClick={onClose}
                         // Cancel Button: border-gray-300, text-gray-800, hover:bg-gray-100
                         className="px-6 py-3 border border-gray-300 text-gray-800 font-medium rounded-xl hover:bg-gray-100 transition duration-150 shadow-sm"
@@ -182,7 +199,7 @@ export default function CampaignAddPage({ isOpen, onClose, onSave }) {
                      <button
                         className="px-6 py-3 bg-[var(--brand)] hover:opacity-90 text-white font-medium rounded-xl shadow-lg transition duration-150 transform hover:scale-[1.01]"
                      >
-                        Create Campaign
+                        {editing ? "Save Changes" : "Create Campaign"}
                      </button>
                   </div>
                </form>

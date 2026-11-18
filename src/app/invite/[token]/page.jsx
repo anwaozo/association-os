@@ -3,7 +3,7 @@ import { Fragment, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
-import Header from '@/app/header';
+import { PublicShell } from '@/app/header';
 import OrgBadge from '@/app/components/OrgBadge';
 import { useApiClient } from '@/lib/apiClient';
 import { useAuth } from '@/context/AuthContext';
@@ -61,26 +61,25 @@ export default function InvitePage() {
    const set = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
    return (
-      <Fragment>
-         <Header />
-         <div className="pt-20 min-h-screen bg-gray-100">
+      <PublicShell>
+         <div>
             <div className="max-w-md mx-auto py-14 px-4">
                {problem ? (
-                  <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200 text-center">
+                  <div className="bg-white p-8 rounded-2xl shadow-sm border border-[#E4E4EF] text-center">
                      <h1 className="text-xl font-bold text-gray-900 mb-2">Invite link unavailable</h1>
                      <p className="text-gray-600 mb-6">{problem}</p>
-                     <Link href="/login" className="text-sm font-medium text-[#1F3864] hover:underline">Go to login</Link>
+                     <Link href="/login" className="text-sm font-medium text-[#6460FF] hover:underline">Go to login</Link>
                   </div>
                ) : !invite ? (
                   <p className="text-center text-gray-500">Checking your invite...</p>
                ) : (
                   <>
                      <div className="flex justify-center mb-4"><OrgBadge org={invite.organization} size={56} /></div>
-                     <h1 className="text-2xl font-bold text-gray-900 text-center">Set up {invite.organization.name}</h1>
+                     <h1 className="text-3xl font-bold text-[#0F1215] text-center">Set up {invite.organization.name}</h1>
                      <p className="text-gray-600 text-center mt-2 mb-8">
                         You&apos;re the admin. Create your password to get started.
                      </p>
-                     <form onSubmit={submit} className="bg-white p-8 rounded-xl shadow-lg border border-gray-200 space-y-5">
+                     <form onSubmit={submit} className="bg-white p-8 rounded-2xl shadow-sm border border-[#E4E4EF] space-y-5">
                         <div>
                            <label className="block text-sm font-medium text-gray-700 mb-1">Email (your login)</label>
                            <input value={invite.email} readOnly className={`${field} bg-gray-50 text-gray-600`} />
@@ -109,7 +108,7 @@ export default function InvitePage() {
                            <input id="confirm" name="confirm" type={show ? 'text' : 'password'} minLength={8} value={form.confirm} onChange={set} required autoComplete="new-password" className={field} />
                         </div>
                         {error && <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
-                        <button type="submit" disabled={saving} className="w-full py-2.5 px-4 text-base font-medium rounded-lg text-white bg-[var(--brand)] hover:opacity-90 disabled:opacity-60">
+                        <button type="submit" disabled={saving} className="w-full py-3 px-4 text-base font-medium rounded-full text-white bg-[#1A1B1F] hover:bg-black disabled:opacity-60">
                            {saving ? 'Creating your account...' : 'Create account'}
                         </button>
                         <p className="text-xs text-gray-500 text-center">
@@ -120,6 +119,6 @@ export default function InvitePage() {
                )}
             </div>
          </div>
-      </Fragment>
+      </PublicShell>
    );
 }

@@ -59,11 +59,11 @@ export default function EventAddPage({ isOpen, onClose, onSave, onUpdateEvent, m
 
    const validateForm = (data) => {
       let newErrors = {};
-      if (!data.title.trim()) newErrors.title = "Title is required";
+      if (!String(data.title || "").trim()) newErrors.title = "Title is required";
       if (!data.date) newErrors.date = "Date is required";
       if (!data.start_time) newErrors.start_time = "Start time is required";
       if (!data.end_time) newErrors.end_time = "End time is required";
-      if (!data.location.trim()) newErrors.location = "Location is required";
+      if (!String(data.location || "").trim()) newErrors.location = "Location is required";
       if (!data.capacity) newErrors.capacity = "Capacity is required";
 
       setErrors(newErrors);
