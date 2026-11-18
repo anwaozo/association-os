@@ -36,6 +36,11 @@ export default function EventDetailPage({ params }) {
    }
    const [activeTab, setActiveTab] = useState('details');
 
+   // "View RSVPs" links here with ?tab=rsvps.
+   useEffect(() => {
+      if (new URLSearchParams(window.location.search).get('tab') === 'rsvps') setActiveTab('rsvps');
+   }, []);
+
    useEffect(() => {
       if (!item) {
          router.replace("/event"); // redirect back to the events list
@@ -432,6 +437,12 @@ export default function EventDetailPage({ params }) {
             return null;
       }
    };
+
+   // Opened without an event selected (reload or direct link): the effect above
+   // sends the user back to the events list; render nothing meanwhile.
+   if (!item) {
+      return <p className="text-gray-500">Loading event…</p>;
+   }
 
    return (
       <div className="space-y-6">

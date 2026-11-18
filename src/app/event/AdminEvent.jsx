@@ -238,7 +238,7 @@ export default function AdminEvent() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 border-t pt-4">
-               <Link href={`/event/${event.slug}`} className="flex-1 flex items-center justify-center px-4 py-2 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition border border-gray-300 text-sm">
+               <Link href={`/event/${event.slug}?tab=rsvps`} onClick={() => setItem(event)} className="flex-1 flex items-center justify-center px-4 py-2 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition border border-gray-300 text-sm">
                   <Users className="w-4 h-4 mr-1" />
                   View RSVPs
                </Link>
