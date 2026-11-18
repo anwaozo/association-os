@@ -1,4 +1,5 @@
 'use client';
+import { SHOW_PREVIEW } from '@/lib/features';
 import { Fragment, useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/app/components/Header';
@@ -178,13 +179,17 @@ export default function AdminEvent() {
                            >
                               <Pencil size={14} /> Edit Event
                            </button>
+                           {SHOW_PREVIEW && (
                            <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
                               <File size={14} /> Export RSVP List
                            </button>
-                           <div className="h-px bg-gray-100 my-1"></div>
+                           )}
+                           {SHOW_PREVIEW && <div className="h-px bg-gray-100 my-1"></div>}
+                           {SHOW_PREVIEW && (
                            <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3">
                               <Trash2 size={14} /> Cancel Event
                            </button>
+                           )}
                         </div>
                      )}
                   </div>
@@ -224,14 +229,16 @@ export default function AdminEvent() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 border-t pt-4">
-               <button className="flex-1 flex items-center justify-center px-4 py-2 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition border border-gray-300 text-sm">
+               <Link href={`/event/${event.slug}`} className="flex-1 flex items-center justify-center px-4 py-2 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition border border-gray-300 text-sm">
                   <Users className="w-4 h-4 mr-1" />
                   View RSVPs
-               </button>
+               </Link>
+               {SHOW_PREVIEW && (
                <button className="flex-1 flex items-center justify-center px-4 py-2 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition border border-gray-200 text-sm">
                   <Send className="w-4 h-4 mr-1" />
                   Send Announcement
                </button>
+               )}
             </div>
          </div>
       );

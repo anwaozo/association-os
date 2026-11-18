@@ -1,4 +1,5 @@
 'use client';
+import { SHOW_PREVIEW } from '@/lib/features';
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/app/components/Header';
@@ -105,9 +106,11 @@ export default function MembershipPage() {
                   onClick={(e) => e.stopPropagation()}
                   className="absolute right-12 top-8 w-48 bg-white rounded-lg shadow-xl border border-gray-100 z-10 py-1"
                >
+                  {SHOW_PREVIEW && (
                   <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
                      <Eye size={14} /> View Members
                   </button>
+                  )}
                   <button 
                      className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3 cursor-pointer"
                      onClick={() => {
@@ -119,13 +122,17 @@ export default function MembershipPage() {
                   >
                      <Pencil size={14} /> Edit Tier
                   </button>
+                  {SHOW_PREVIEW && (
                   <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
                      <Send size={14} /> Invite Contact
                   </button>
-                  <div className="h-px bg-gray-100 my-1"></div>
+                  )}
+                  {SHOW_PREVIEW && <div className="h-px bg-gray-100 my-1"></div>}
+                  {SHOW_PREVIEW && (
                   <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3">
                      <Trash2 size={14} /> Delete
                   </button>
+                  )}
                </div>
             )}
          </div>

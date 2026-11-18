@@ -277,10 +277,12 @@ export default function EventDetailPage({ params }) {
             <div className="mb-6">
                <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-bold text-gray-900">All RSVPs</h3>
+                  {SHOW_PREVIEW && (
                   <button className="flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-800 font-medium rounded-xl hover:bg-gray-100 transition shadow-sm">
                         <FileDown className="w-5 h-5 mr-2" />
                         Download List
                   </button>
+                  )}
                </div>
                <p className="text-sm text-gray-600 mb-4">
                   <span className="font-semibold text-gray-900">{filteredRsvps.length}</span> Members / <span className="font-semibold text-gray-900">{totalGuests?totalGuests:0}</span> Guests
@@ -486,10 +488,12 @@ export default function EventDetailPage({ params }) {
                   Send Announcement
                </button>
                )}
+               {SHOW_PREVIEW && (
                <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm">
                   <SquarePen className="w-5 h-5 mr-2" />
                   Edit Event
                </button>
+               )}
             </div>
          </div>
          

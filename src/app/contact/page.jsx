@@ -1,4 +1,5 @@
 'use client';
+import { SHOW_PREVIEW } from '@/lib/features';
 import { useState, useEffect } from 'react';
 import Header from '@/app/components/Header';
 import StatsCard from '@/app/components/StatsCard';
@@ -231,9 +232,11 @@ export default function ContactPage() {
                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                   </button>
                      
+                  {SHOW_PREVIEW && (
                   <button className="flex items-center gap-2 border border-gray-300 text-slate-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
                      <Download size={16} />Download
                   </button>
+                  )}
                </div>
             </div>
 
@@ -297,13 +300,17 @@ export default function ContactPage() {
                                  >
                                     <Pencil size={14} /> Edit
                                  </button>
+                                 {SHOW_PREVIEW && (
                                  <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-50 flex items-center gap-3">
                                     <Send size={14} /> Invite Contact
                                  </button>
-                                 <div className="h-px bg-gray-100 my-1"></div>
+                                 )}
+                                 {SHOW_PREVIEW && <div className="h-px bg-gray-100 my-1"></div>}
+                                 {SHOW_PREVIEW && (
                                  <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-3">
                                     <Trash2 size={14} /> Delete Contact
                                  </button>
+                                 )}
                               </div>
                            )}
                         </td>
