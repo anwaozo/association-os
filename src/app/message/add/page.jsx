@@ -1,317 +1,257 @@
 'use client';
-import { useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import InputField from '@/app/components/forms/InputField';
 import MultiSelect from '@/app/components/forms/MultiSelect';
-import ProtectedRoute from '@/app/components/ProtectedRoute';
-import { Mail, Paperclip, ChevronLeft, X } from 'lucide-react';
+import AdminRoute from '@/app/components/AdminRoute';
+import { useApiClient } from '@/lib/apiClient';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/app/components/toast/ToastContext';
+import { MERGE_HELP } from '@/app/message/MessageList';
+import { Mail, ChevronRight, Users, Info } from 'lucide-react';
 
-export default function MessageAddPage() {
+const AUDIENCES = [
+   { id: 'all_members', value: 'All members' },
+   { id: 'members_and_contacts', value: 'All members and contacts' },
+   { id: 'tier', value: 'Members of a tier' },
+   { id: 'event_attendees', value: 'People who RSVP’d to an event' },
+   { id: 'custom', value: 'Choose people' },
+];
+
+// Same substitutions the server makes, for the preview.
+const merge = (text, vars) => String(text || '')
+   .replace(/\{\{\s*first_name\s*\}\}/gi, (vars.name || '').split(' ')[0] || 'there')
+   .replace(/\{\{\s*name\s*\}\}/gi, vars.name || '')
+   .replace(/\{\{\s*email\s*\}\}/gi, vars.email || '')
+   .replace(/\{\{\s*organization\s*\}\}/gi, vars.organization || '');
+
+function Compose() {
+   const api = useApiClient();
+   const router = useRouter();
+   const params = useSearchParams();
+   const { state } = useAuth();
+   const { showToast } = useToast();
+   const editId = params.get('edit');
+   const templateParam = params.get('template');
+
+   const [templates, setTemplates] = useState([]);
+   const [tiers, setTiers] = useState([]);
+   const [events, setEvents] = useState([]);
+   const [people, setPeople] = useState([]);
+   const [emailEnabled, setEmailEnabled] = useState(true);
+   const [form, setForm] = useState({ templateId: '', audienceType: '', tierId: '', eventId: '', userIds: [], subject: '', body: '' });
+   const [audience, setAudience] = useState(null); // { label, count } | { error }
    const [errors, setErrors] = useState({});
-   const [attachments, setAttachments] = useState([{ file: null }]);
+   const [saving, setSaving] = useState(false);
+   const [loaded, setLoaded] = useState(false);
 
-   const handleFileChange = (e, index) => {
-      const newFiles = [...attachments];
-      newFiles[index].file = e.target.files[0];
-      setAttachments(newFiles);
-   };
+   useEffect(() => {
+      (async () => {
+         try {
+            const [t, m, e, c, cfg] = await Promise.all([
+               api.get('/messages/templates'),
+               api.get('/memberships'),
+               api.get('/events'),
+               api.get('/contacts'),
+               api.get('/messages/config', { silent: true }),
+            ]);
+            setTemplates(t.data);
+            setTiers(m.data || []);
+            setEvents(e.data || []);
+            setPeople(c.data || []);
+            setEmailEnabled(Boolean(cfg.data?.emailEnabled));
 
-   const addAttachment = () => {
-      setAttachments([...attachments, { file: null }]);
-   };
-
-   const removeAttachment = (index) => {
-      const updated = attachments.filter((_, i) => i !== index);
-      setAttachments(updated);
-   };
-
-   const options = [
-      { value: 'mobile', label: 'Mobile Phones' },
-      { value: 'accessories', label: 'Accessories' }, 
-      { value: 'repairs', label: 'Repairs' },
-      { value: 'warranty', label: 'Warranty Services' },
-   ];
-   const [selected, setSelected] = useState(['mobile']);
-
-   const notificationTypes = [
-      { id: "Email", value: "Email" },
-      { id: "SMS",   value: "SMS" }
-   ];
-
-   const templates = [
-      { id: "Blank Template",  value: "Blank Template" },
-      { id: "Welcome Email",   value: "Welcome Email" },
-      { id: "Due Receipt",     value: "Due Receipt" },
-      { id: "Due Reminder",    value: "Due Reminder" },
-      { id: "New Event",       value: "New Event" },
-      { id: "Event Reminder",  value: "Event Reminder" }
-   ];
-
-   const audienceTypes = [
-      { id: "All Members",             value: "All Members" },
-      { id: "Active Members",          value: "Active Members" },
-      { id: "Past Due",                value: "Past Due" },
-      { id: "Event Attendees",         value: "Event Attendees" },
-      { id: "Student Tier",            value: "Student Tier" },
-      { id: "Professional Tier",       value: "Professional Tier" },
-      { id: "Monthly Professional Tier", value: "Monthly Professional Tier" },
-      { id: "Patron Tier",             value: "Patron Tier" },
-      { id: "Custom Selection",        value: "Custom Selection" }
-   ];
-
-
-   const composeMessageFormInitialState = {
-      notification_type: '',
-      template: '',
-      audience: '',
-      event_title: '',
-      recipients: '',
-      subject: '',
-      message: ''
-   };
-   const [composeMessageForm, setComposeMessageForm] = useState(composeMessageFormInitialState);
-
-   const handleTemplateChange = (e) => {
-      const template = MOCK_TEMPLATES.find(t => t.label === e.target.value);
-      setSelectedTemplate(template);
-      setSubject(template.subject);
-      setMessageBody(template.body);
-   };
-
-   const onBack = () => {
-      window.history.back();
-   }
-
-   const validateForm = (data) => {
-      let newErrors = {};
-
-      if (!data.notification_type || !data.notification_type.trim()) {
-         newErrors.notification_type = 'Notification Type is required.';
-      }
-      if (!data.template || !data.template.trim()) {
-         newErrors.template = 'Template is required.';
-      }
-      if (!data.audience || !data.audience.trim()) {
-         newErrors.audience = 'Audience is required.';
-      }
-      if(data.audience === 'Custom Selection'){
-         if (!composeMessageForm.recipients.length) {
-            newErrors.recipients = 'Recipients is required.';
+            if (editId) {
+               const msg = (await api.get(`/messages/${editId}`)).data;
+               if (!['draft', 'ready'].includes(msg.status)) return router.replace(`/message/${editId}`);
+               const ref = msg.audienceRef || {};
+               setForm({
+                  templateId: msg.templateId ? String(msg.templateId) : '',
+                  audienceType: msg.audienceType,
+                  tierId: ref.tierId ? String(ref.tierId) : '',
+                  eventId: ref.eventId ? String(ref.eventId) : '',
+                  userIds: (ref.userIds || []).map(String),
+                  subject: msg.subject,
+                  body: msg.body,
+               });
+            } else if (templateParam) {
+               const tpl = t.data.find((x) => String(x.id) === templateParam);
+               if (tpl) setForm((f) => ({ ...f, templateId: String(tpl.id), subject: tpl.subject, body: tpl.body }));
+            }
+         } catch {
+            // toast shown by the API client
+         } finally {
+            setLoaded(true);
          }
+      })();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [editId, templateParam]);
+
+   const audienceRef = useMemo(() => {
+      if (form.audienceType === 'tier') return { tierId: Number(form.tierId) || null };
+      if (form.audienceType === 'event_attendees') return { eventId: Number(form.eventId) || null };
+      if (form.audienceType === 'custom') return { userIds: form.userIds.map(Number) };
+      return {};
+   }, [form.audienceType, form.tierId, form.eventId, form.userIds]);
+
+   // Live recipient count.
+   useEffect(() => {
+      if (!form.audienceType) return setAudience(null);
+      // Wait until the tier, event or people picker has a value.
+      if ((form.audienceType === 'tier' && !form.tierId)
+         || (form.audienceType === 'event_attendees' && !form.eventId)
+         || (form.audienceType === 'custom' && !form.userIds.length)) return setAudience(null);
+      const t = setTimeout(() => {
+         api.post('/messages/audience-preview', { audienceType: form.audienceType, audienceRef }, { silent: true })
+            .then((r) => setAudience(r.data))
+            .catch((err) => setAudience({ error: err?.response?.data?.message || 'Choose who gets this message' }));
+      }, 250);
+      return () => clearTimeout(t);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [form.audienceType, audienceRef]);
+
+   const pickTemplate = (id) => {
+      const tpl = templates.find((x) => String(x.id) === id);
+      const dirty = form.body.trim() && form.body !== templates.find((x) => String(x.id) === form.templateId)?.body;
+      if (tpl && dirty && !window.confirm('Replace what you have written with this template?')) return;
+      setForm((f) => ({ ...f, templateId: id, ...(tpl ? { subject: tpl.subject, body: tpl.body } : {}) }));
+   };
+
+   const validate = () => {
+      const e = {};
+      if (!form.audienceType) e.audienceType = 'Choose who gets this message.';
+      if (form.audienceType === 'tier' && !form.tierId) e.tierId = 'Choose a tier.';
+      if (form.audienceType === 'event_attendees' && !form.eventId) e.eventId = 'Choose an event.';
+      if (form.audienceType === 'custom' && !form.userIds.length) e.userIds = 'Choose at least one person.';
+      if (!form.subject.trim()) e.subject = 'Subject is required.';
+      if (!form.body.trim()) e.body = 'Message is required.';
+      setErrors(e);
+      return Object.keys(e).length === 0;
+   };
+
+   const submit = async (action) => {
+      if (!validate()) return;
+      if (action === 'send' && emailEnabled) {
+         const n = audience?.count ?? 0;
+         if (!window.confirm(`Send this email to ${n} ${n === 1 ? 'person' : 'people'} now?`)) return;
       }
-      if(data.audience === 'Event Attendees'){
-         if (!composeMessageForm.event_title.length) {
-            newErrors.event_title = 'Event Title is required.';
+      setSaving(true);
+      const payload = {
+         subject: form.subject,
+         body: form.body,
+         audienceType: form.audienceType,
+         audienceRef,
+         templateId: form.templateId ? Number(form.templateId) : null,
+      };
+      try {
+         let res;
+         if (editId) {
+            await api.put(`/messages/${editId}`, payload);
+            res = action === 'send' ? await api.post(`/messages/${editId}/send`) : { data: { status: 'draft' } };
+         } else {
+            res = await api.post('/messages', { ...payload, action });
          }
+         const st = res.data.status;
+         if (st === 'sent' || st === 'partial') showToast(`Sent to ${res.data.sentCount} ${res.data.sentCount === 1 ? 'person' : 'people'}`, 'success');
+         else if (st === 'ready') showToast('Saved as ready to send. It goes out once email is connected.', 'info');
+         else showToast('Draft saved', 'success');
+         router.push('/message');
+      } catch {
+         // toast shown by the API client
+      } finally {
+         setSaving(false);
       }
-      if (!data.subject || !data.subject.trim()) {
-         newErrors.subject = 'Subject is required.';
-      }
-      if (!data.message || !data.message.trim()) {
-         newErrors.message = 'Message is required.';
-      }
-
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
    };
 
-   const send_now = () => {
-      if (validateForm(composeMessageForm)) {
-         console.log('composeMessageForm', 'send Now', composeMessageForm);
-      }
-   }
+   const orgName = state?.organization?.name || 'Your organization';
+   const sample = { name: state?.user?.name || 'Jordan Smith', email: state?.user?.email || '', organization: orgName };
+   const personOptions = people.map((p) => ({ value: String(p.id), label: p.name ? `${p.name} (${p.email})` : p.email }));
 
-   const save_template = () => {
-      if (validateForm(composeMessageForm)) {
-         console.log('composeMessageForm', 'save_template', composeMessageForm);
-      }
-   }
+   if (!loaded) return <p className="text-gray-500">Loading…</p>;
 
-   const handleSend = () => {
-      // Mock send logic
-      console.log({
-         type: notificationType,
-         audience: audience,
-         subject: subject,
-         body: messageBody
-      });
-      // On successful send, return to the main log page
-      onCancel(); 
-      console.log('Message sent successfully (mock action)!');
-   };
-
-
-   // Shows the first three lines of the message body for preview
-   const previewBody = composeMessageForm.message.split('\n').slice(0, 3).join('\n'); 
-   
    return (
-      <ProtectedRoute>
-         <div className="space-y-6">
-            <nav className="flex items-center space-x-2 text-sm text-black-500 font-medium">
-               <button onClick={onBack} className="flex items-center hover:text-[var(--brand)] transition">
-                  <Mail className="w-5 h-4 mr-1" /> Messages
-               </button>
-               <span><ChevronLeft /></span>
-               <span className="text-gray-900 truncate max-w-xs">Compose Message</span>
-            </nav>
+      <div className="space-y-6">
+         <nav className="flex items-center space-x-2 text-sm font-medium">
+            <button onClick={() => router.push('/message')} className="flex items-center hover:text-[var(--brand)] transition">
+               <Mail className="w-5 h-4 mr-1" /> Messages
+            </button>
+            <ChevronRight size={16} />
+            <span className="text-gray-900">{editId ? 'Edit Message' : 'Compose Message'}</span>
+         </nav>
 
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6">
-               <div className="flex flex-wrap items-center space-x-4 mb-4 sm:mb-0">
-                  <h1 className="text-3xl font-bold text-gray-900">Compose New Message</h1>
+         <h1 className="text-3xl font-bold text-gray-900">{editId ? 'Edit Message' : 'Compose New Message'}</h1>
+
+         {!emailEnabled && (
+            <div className="flex gap-3 items-start p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-900 text-sm">
+               <Info size={18} className="shrink-0 mt-0.5" />
+               <p>Email sending isn’t connected yet. <b>Send</b> saves this message as ready to send. Nothing goes out until email is switched on.</p>
+            </div>
+         )}
+
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200 space-y-5">
+               <InputField label="Template" name="template" type="select" value={form.templateId} values={templates.map((t) => ({ id: String(t.id), value: t.name }))} onChange={(e) => pickTemplate(e.target.value)} />
+
+               <InputField
+                  label="Audience" name="audience" type="select" value={form.audienceType} values={AUDIENCES}
+                  error={errors.audienceType}
+                  onFocus={() => setErrors((p) => ({ ...p, audienceType: null }))}
+                  onChange={(e) => setForm({ ...form, audienceType: e.target.value })}
+               />
+               {form.audienceType === 'tier' && (
+                  <InputField label="Tier" name="tier" type="select" value={form.tierId} values={tiers.map((t) => ({ id: String(t.id), value: t.name }))} error={errors.tierId}
+                     onFocus={() => setErrors((p) => ({ ...p, tierId: null }))} onChange={(e) => setForm({ ...form, tierId: e.target.value })} />
+               )}
+               {form.audienceType === 'event_attendees' && (
+                  <InputField label="Event" name="event" type="select" value={form.eventId} values={events.map((ev) => ({ id: String(ev.id), value: ev.title }))} error={errors.eventId}
+                     onFocus={() => setErrors((p) => ({ ...p, eventId: null }))} onChange={(e) => setForm({ ...form, eventId: e.target.value })} />
+               )}
+               {form.audienceType === 'custom' && (
+                  <MultiSelect label="Recipients" options={personOptions} value={form.userIds} placeholder="Search by name or email" error={errors.userIds}
+                     onChange={(vals) => { setErrors((p) => ({ ...p, userIds: null })); setForm((f) => ({ ...f, userIds: vals })); }} />
+               )}
+               {audience && (
+                  <p className={`flex items-center gap-2 text-sm ${audience.error ? 'text-red-600' : 'text-gray-700'}`}>
+                     <Users size={16} />
+                     {audience.error ? audience.error : <span><b>{audience.count}</b> {audience.count === 1 ? 'person' : 'people'} · {audience.label}</span>}
+                  </p>
+               )}
+
+               <InputField label="Subject" name="subject" type="text" maxLength={200} value={form.subject} error={errors.subject}
+                  onFocus={() => setErrors((p) => ({ ...p, subject: null }))} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
+               <InputField label="Message" name="body" type="textarea" rows={12} value={form.body} error={errors.body} info={MERGE_HELP}
+                  onFocus={() => setErrors((p) => ({ ...p, body: null }))} onChange={(e) => setForm({ ...form, body: e.target.value })} />
+
+               <div className="flex flex-wrap justify-end gap-3 pt-2">
+                  <button type="button" onClick={() => router.push('/message')} className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                  <button type="button" disabled={saving} onClick={() => submit('draft')} className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-60">Save draft</button>
+                  <button type="button" disabled={saving} onClick={() => submit('send')} className="px-5 py-2 text-sm font-medium text-white bg-[var(--brand)] rounded-lg disabled:opacity-60">
+                     {saving ? 'Working…' : emailEnabled ? 'Send now' : 'Save as ready to send'}
+                  </button>
                </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-               <div className="lg:col-span-2 bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-200">
-                  <div className="grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-5">
-                     <InputField
-                        label="Notification Type"
-                        name="notification_type"
-                        type="select"
-                        values={notificationTypes}
-                        placeholder=""
-                        error={errors?.notification_type}
-                        onFocus={() => setErrors(prev => ({ ...prev, notification_type: null }))}
-                        onChange={(e) => setComposeMessageForm({ ...composeMessageForm, notification_type: e.target.value })}
-                     />
-                     <InputField
-                        label="Template"
-                        name="template"
-                        type="select"
-                        values={templates}
-                        placeholder=""
-                        error={errors?.template}
-                        onFocus={() => setErrors(prev => ({ ...prev, template: null }))}
-                        onChange={(e) => setComposeMessageForm({ ...composeMessageForm, template: e.target.value })}
-                     />
-                     <InputField
-                        label="Audience"
-                        name="audience"
-                        type="select"
-                        values={audienceTypes}
-                        placeholder=""
-                        error={errors?.audience}
-                        onFocus={() => setErrors(prev => ({ ...prev, audience: null }))}
-                        onChange={(e) => setComposeMessageForm({ ...composeMessageForm, audience: e.target.value })}
-                     />
-                     {composeMessageForm.audience === 'Custom Selection' && (
-                        <MultiSelect
-                           label="Recipient(s) Name"
-                           name="recipients"
-                           options={options}
-                           value={selected}
-                           placeholder="Search your recipient name"
-                           onFocus={() => setErrors(prev => ({ ...prev, recipients: null }))}
-                           onChange={(selectedValues) =>
-                              setComposeMessageForm({
-                                 ...composeMessageForm,
-                                 recipients: selectedValues
-                              })
-                           }
-                           error={errors.recipients}
-                        />
-                     )}
-                     {composeMessageForm.audience === 'Event Attendees' && (
-                        <MultiSelect
-                           label="Event Title"
-                           name="event_title"
-                           options={options}
-                           value={selected}
-                           placeholder="Event Title"
-                           onFocus={() => setErrors(prev => ({ ...prev, event_title: null }))}
-                           onChange={(selectedValues) =>
-                              setComposeMessageForm({
-                                 ...composeMessageForm,
-                                 event_title: selectedValues
-                              })
-                           }
-                           error={errors.event_title}
-                        />
-                     )}
-                     <InputField
-                        label="Subject"
-                        name="subject"
-                        type="text"
-                        placeholder="eg., All Members"
-                        error={errors?.subject}
-                        onFocus={() => setErrors(prev => ({ ...prev, subject: null }))}
-                        onChange={(e) => setComposeMessageForm({ ...composeMessageForm, subject: e.target.value })}
-                     />
-                     <InputField
-                        label="Message"
-                        name="message"
-                        type="textarea"
-                        placeholder="eg., Write your message here..."
-                        error={errors?.message}
-                        onFocus={() => setErrors(prev => ({ ...prev, message: null }))}
-                        onChange={(e) => setComposeMessageForm({ ...composeMessageForm, message: e.target.value })}
-                     />
-
-                     <div className="mt-5">
-                        {attachments.map((att, index) => (
-                           <div key={index} className="flex items-center mb-3">
-                              <label
-                                 className="flex-1 inline-flex items-center px-4 py-2 border border-gray-300 bg-gray-50 
-                                 text-gray-700 rounded-lg shadow-sm cursor-pointer hover:bg-gray-100 transition-colors 
-                                 text-sm font-medium"
-                              >
-                                 <Paperclip className="w-4 h-4 mr-2" />
-                                 {att.file ? att.file.name : "Choose file"}
-                                 <input
-                                    type="file"
-                                    className="sr-only"
-                                    onChange={(e) => handleFileChange(e, index)}
-                                 />
-                              </label>
-
-                              {attachments.length > 1 && (
-                                 <button
-                                    onClick={() => removeAttachment(index)}
-                                    className="ml-2 text-red-500 hover:text-red-700"
-                                 >
-                                    <X className="w-5 h-5" />
-                                 </button>
-                              )}
-                           </div>
-                        ))}
-
-                        <button
-                           onClick={addAttachment}
-                           className="text-indigo-600 hover:text-indigo-800 text-sm font-medium mt-2"
-                        >
-                           + Add Attachment
-                        </button>
-                     </div>
-                     <div className="flex items-center justify-end space-x-3">
-                        <button type="submit" onClick={send_now} className="px-6 py-2 text-white bg-[var(--brand)] rounded-lg transition font-medium shadow-md">Send Now</button>
-                        <button type="button" onClick={save_template} className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium">Save as template</button>
-                     </div>
-                  </div>
-               </div>
-
-               <div className="lg:col-span-2">
-                  <div className="sticky top-6 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        Preview
-                     </h3>
-                     
-                     <div className="border border-gray-300 bg-orange-50 p-4 rounded-lg">
-                        <p className="text-xs text-gray-600 mb-2">To: {composeMessageForm.audience || audienceTypes[0].value}</p>
-                        <h4 className="text-base font-semibold text-gray-900 mb-3 border-b pb-2 border-gray-200">
-                           {composeMessageForm.subject || 'No Subject'}
-                        </h4>
-                        <div className="text-sm text-gray-800 whitespace-pre-line">
-                           {composeMessageForm.message ? previewBody : 'No message body.'}
-                        </div>
-                        {composeMessageForm.message.split('\n').length > 3 && (
-                           <p className="text-xs text-gray-500 mt-2">
-                              [Message preview truncated. Full message visible on mobile.]
-                           </p>
-                        )}
-                     </div>
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 h-fit lg:sticky lg:top-6">
+               <p className="text-xs uppercase tracking-wide text-gray-500 mb-3">Preview (as {sample.name} would see it)</p>
+               <div className="rounded-lg overflow-hidden shadow-sm border border-gray-200 bg-white">
+                  <div className="px-5 py-3 text-white font-semibold" style={{ background: 'var(--brand)' }}>{orgName}</div>
+                  <div className="p-5">
+                     <p className="font-semibold text-gray-900 mb-4">{merge(form.subject, sample) || <span className="text-gray-400">No subject yet</span>}</p>
+                     <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{merge(form.body, sample) || <span className="text-gray-400">Your message appears here.</span>}</div>
                   </div>
                </div>
             </div>
          </div>
-      </ProtectedRoute>
+      </div>
+   );
+}
+
+export default function MessageAddPage() {
+   return (
+      <AdminRoute>
+         <Suspense fallback={<p className="text-gray-500">Loading…</p>}>
+            <Compose />
+         </Suspense>
+      </AdminRoute>
    );
 }

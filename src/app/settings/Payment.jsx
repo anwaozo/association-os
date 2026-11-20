@@ -1,81 +1,83 @@
-import {useState} from 'react';
-import ToggleSwitch from '@/app/components/forms/ToggleSwitch';
+'use client';
+import { useEffect, useState } from 'react';
+import { useApiClient } from '@/lib/apiClient';
+import { CheckCircle2, AlertCircle, ExternalLink, CreditCard } from 'lucide-react';
 
+// Stripe Connect (Express). The organization links its own Stripe account;
+// online donations are paid out to it directly.
 export default function Payment() {
+   const api = useApiClient();
+   const [status, setStatus] = useState(null);
+   const [busy, setBusy] = useState(false);
 
-   const [isRenewal, setIsRenewal] = useState(false);
-   const [paymentReceipt, setPaymentReceipt] = useState(false);
-   const [paymentPlan, setPaymentPlan] = useState(false);
-   
+   useEffect(() => {
+      api.get('/payments/status').then((r) => setStatus(r.data)).catch(() => {});
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, []);
+
+   const go = async (path) => {
+      setBusy(true);
+      try {
+         const r = await api.post(path);
+         window.location.href = r.data.url;
+      } catch {
+         setBusy(false);
+      }
+   };
+
+   if (!status) return <p className="text-gray-500 mt-6">Loading…</p>;
+
    return (
-      <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-         
-         <h2 className="text-2xl font-semibold mb-6">Stripe Integration</h2>
-         <p className="text-gray-600 mb-6">Connect your Stripe account for payments</p>
-         
-         {/* Connected to Stripe Card */}
-         <div className="bg-green-50 border border-green-300 rounded-lg p-4 mb-8">
-            <div className="flex items-center justify-between">
-               <div className="flex items-center">
-                  <span className="text-green-500 mr-3">🟢</span>
+      <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 mt-6 max-w-3xl space-y-6">
+         <div>
+            <h2 className="text-2xl font-semibold">Online payments</h2>
+            <p className="text-gray-600 mt-1">Connect a Stripe account so members and supporters can donate by card. Money is paid out straight to your organization’s bank account.</p>
+         </div>
+
+         {!status.stripeConfigured ? (
+            <div className="flex gap-3 items-start p-4 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 text-sm">
+               <AlertCircle size={18} className="shrink-0 mt-0.5" />
+               <p>Online payments aren’t switched on for this platform yet. You can still record cash and check gifts under Fundraising.</p>
+            </div>
+         ) : status.chargesEnabled ? (
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-green-300 bg-green-50">
+               <div className="flex items-start gap-3">
+                  <CheckCircle2 className="text-green-600 shrink-0" />
                   <div>
-                  <p className="font-semibold text-green-800">Connected to Stripe</p>
-                  <p className="text-sm text-green-700">Account: acct_1Abc...xyz</p>
+                     <p className="font-semibold text-green-800">Connected to Stripe</p>
+                     <p className="text-sm text-green-700">You’re accepting online donations.</p>
                   </div>
                </div>
-               <span className="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  Active
-               </span>
+               <button onClick={() => go('/payments/dashboard')} disabled={busy} className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-green-400 text-green-800 rounded-lg bg-white hover:bg-green-100 disabled:opacity-60">
+                  Open Stripe dashboard <ExternalLink size={14} />
+               </button>
             </div>
-         </div>
+         ) : (
+            <div className="p-4 rounded-lg border border-indigo-200 bg-indigo-50 space-y-3">
+               <div className="flex items-start gap-3">
+                  <CreditCard className="text-indigo-600 shrink-0" />
+                  <div>
+                     <p className="font-semibold text-indigo-900">{status.connected ? 'Finish setting up Stripe' : 'Connect Stripe'}</p>
+                     <p className="text-sm text-indigo-800">
+                        {status.connected
+                           ? 'Stripe still needs a few details (like your bank account) before you can accept donations.'
+                           : 'Takes about 5 minutes. Stripe will ask for your organization’s details and the bank account to pay out to.'}
+                     </p>
+                  </div>
+               </div>
+               <button onClick={() => go('/payments/connect')} disabled={busy} className="px-5 py-2.5 text-sm font-medium text-white bg-[var(--brand)] rounded-lg disabled:opacity-60">
+                  {busy ? 'Opening Stripe…' : status.connected ? 'Continue setup' : 'Connect with Stripe'}
+               </button>
+            </div>
+         )}
 
-         {/* Stripe Publishable Key */}
-         <div className="mb-8">
-            <label htmlFor="publishable-key" className="block text-lg font-medium text-gray-900 mb-2">
-               Stripe Publishable Key
-            </label>
-            <input
-               id="publishable-key"
-               type="password"
-               defaultValue="**********" // Placeholder for saved key
-               className="w-full border border-gray-300 p-3 rounded-lg focus:ring-orange-500 focus:border-orange-500"
-            />
-            <p className="mt-2 text-sm text-gray-500">
-               Your Stripe keys are securely stored
-            </p>
-         </div>
-
-         {/* Toggle Switches */}
-         <div className="divide-y divide-gray-100">
-            <ToggleSwitch
-               label="Enable Automatic Renewals"
-               description="Auto-charge members on renewal dates"
-               enabled={isRenewal}
-               setEnabled={setIsRenewal}
-            />
-            <ToggleSwitch
-               label="Send Payment Receipts"
-               description="Email receipts after successful payments"
-               enabled={paymentReceipt}
-               setEnabled={setPaymentReceipt}
-            />
-            <ToggleSwitch
-               label="Allow Payment Plans"
-               description="Enable monthly payment options"
-               enabled={paymentPlan}
-               setEnabled={setPaymentPlan}
-            />
-         </div>
-
-         {/* Footer Actions */}
-         <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-            <button className="text-red-600 hover:text-red-800 font-medium p-2">
-               Disconnect Stripe
-            </button>
-            <button className="bg-[var(--brand)] text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors">
-               Save Changes
-            </button>
-         </div>
+         {status.stripeConfigured && (
+            <ul className="text-sm text-gray-600 list-disc pl-5 space-y-1">
+               <li>Stripe charges its standard card processing fee on each donation.</li>
+               {status.platformFeePercent > 0 && <li>A {status.platformFeePercent}% platform fee also applies to online donations.</li>}
+               <li>Refunds are handled in your Stripe dashboard and show up here automatically.</li>
+            </ul>
+         )}
       </div>
    );
 }

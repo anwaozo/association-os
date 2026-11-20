@@ -1,166 +1,93 @@
 'use client';
-import { useState } from 'react';
-import Sidebar from '@/app/components/Sidebar';
+import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import Header from '@/app/components/Header';
+import AdminRoute from '@/app/components/AdminRoute';
 import MessageList from '@/app/message/MessageList';
 import DeliveryLog from '@/app/message/DeliveryLog';
-import { FaSearch, FaCreditCard, FaUserPlus, FaCheckCircle, FaHeart, FaBell, FaList, FaFile } from 'react-icons/fa';
-import ProtectedRoute from '@/app/components/ProtectedRoute';
-import { ListOrdered, FileText } from 'lucide-react';
+import { useApiClient } from '@/lib/apiClient';
+import { ListOrdered, FileText, Plus, Info } from 'lucide-react';
 
-export default function MessagePage() {
-   const [isOpen, setIsOpen] = useState(true);
-   const [activeTab, setActiveTab] = useState('templates');
-   const [searchText, setSearchText] = useState('');
-   const [filter, setFilter] = useState('All Activity');
+function MessagePageInner() {
+   const api = useApiClient();
+   const [activeTab, setActiveTab] = useState('log');
+   const [templates, setTemplates] = useState([]);
+   const [messages, setMessages] = useState([]);
+   const [emailEnabled, setEmailEnabled] = useState(true);
+   const [loading, setLoading] = useState(true);
 
-   const MOCK_MESSAGES = [
-      { 
-         id: 1, 
-         notification_type: "Email",
-         template: "Blank Message",
-         subject: "Welcome to our organization!",
-         delivery_log:[
-            {label: 'Sent', count: 15},
-            {label: 'Delivered', count: 15},
-            {label: 'Opened', count: 12},
-            {label: 'Cliked', count: 8},
-            {label: 'Failed', count: 0},
-         ]
-      },
-      { 
-         id: 2, 
-         notification_type: "Email",
-         template: "Due Receipt",
-         subject: "Welcome to our organization!",
-         delivery_log:[
-            {label: 'Sent', count: 15},
-            {label: 'Delivered', count: 15},
-            {label: 'Opened', count: 12},
-            {label: 'Cliked', count: 8},
-            {label: 'Failed', count: 0},
-         ]
-      },
-      { 
-         id: 3, 
-         notification_type: "Email",
-         template: "Welcome Email",
-         subject: "Welcome to our organization!",
-         delivery_log:[
-            {label: 'Sent', count: 15},
-            {label: 'Delivered', count: 15},
-            {label: 'Opened', count: 12},
-            {label: 'Cliked', count: 8},
-            {label: 'Failed', count: 0},
-         ]
-      },
-      { 
-         id: 4, 
-         notification_type: "Email",
-         template: "New Event",
-         subject: "Welcome to our organization!",
-         delivery_log:[
-            {label: 'Sent', count: 15},
-            {label: 'Delivered', count: 15},
-            {label: 'Opened', count: 12},
-            {label: 'Cliked', count: 8},
-            {label: 'Failed', count: 0},
-         ]
-      },
-      { 
-         id: 5, 
-         notification_type: "SMS",
-         template: "Event Reminder",
-         subject: "Welcome to our organization!",
-         delivery_log:[
-            {label: 'Sent', count: 15},
-            {label: 'Delivered', count: 15},
-            {label: 'Opened', count: 12},
-            {label: 'Cliked', count: 8},
-            {label: 'Failed', count: 0},
-         ]
-      },
-   ];
-
-   const deliveryLog = [
-      {
-         id: 1,
-         title: 'Annual Gala - Save the Date',
-         target: { type: 'group', label: 'All Members' },
-         time: '2 hours ago',
-         stats: { sent: 15, delivered: 15, opened: 12, clicked: 8, failed: 0 },
-      },
-      {
-         id: 2,
-         title: 'Dues Reminder - October',
-         target: { type: 'tag', label: 'Past Due Members' },
-         time: '1 day ago',
-         stats: { sent: 15, delivered: 15, opened: 12, clicked: 8, failed: 0 },
-      },
-      {
-         id: 3,
-         title: 'Welcome to our organization',
-         target: { type: 'group', label: 'New Members' },
-         time: '2 days ago',
-         stats: { sent: 15, delivered: 15, opened: 12, clicked: 8, failed: 0 },
-      },
-      {
-         id: 4,
-         title: 'Welcome to our organization',
-         target: { type: 'user', label: 'Sarah Johnson' },
-         time: '5 days ago',
-         stats: { sent: 1, delivered: 1, opened: 1, clicked: 1, failed: 0 },
-      },
-   ];
-
-   const ICON_MAP = {
-      payment: { icon: FaCreditCard, color: 'text-green-600', bg: 'bg-green-100', detailColor: 'text-green-800', detailBg: 'bg-green-100' },
-      member_joined: { icon: FaUserPlus , color: 'text-blue-600', bg: 'bg-blue-100', detailColor: 'text-blue-800', detailBg: 'bg-blue-100' },
-      event_rsvp: { icon: FaCheckCircle, color: 'text-purple-600', bg: 'bg-purple-100', detailColor: 'text-purple-800', detailBg: 'bg-purple-100' },
-      donation: { icon: FaHeart, color: 'text-red-600', bg: 'bg-red-100', detailColor: 'text-red-800', detailBg: 'bg-red-100' },
-      notification_sent: { icon: FaBell, color: 'text-orange-600', bg: 'bg-orange-100', detailColor: 'text-orange-800', detailBg: 'bg-orange-100' },
-   };
-
-   const tabDatas = [
-      { id: 'templates', label: 'Templates', icon: ListOrdered },
-      { id: 'delivery_log', label: 'Delivery Log', icon: FileText },
-   ];
-
-   const renderTabContent = () => {
-      switch (activeTab) {
-         case 'templates':
-            return <MessageList messages={MOCK_MESSAGES} />;
-         case 'delivery_log':
-            return <DeliveryLog messages={deliveryLog} />;
-         default:
-            return null;
+   const load = useCallback(async () => {
+      setLoading(true);
+      try {
+         const [t, m, c] = await Promise.all([
+            api.get('/messages/templates'),
+            api.get('/messages'),
+            api.get('/messages/config', { silent: true }),
+         ]);
+         setTemplates(t.data);
+         setMessages(m.data);
+         setEmailEnabled(Boolean(c.data?.emailEnabled));
+      } catch {
+         // toast shown by the API client
+      } finally {
+         setLoading(false);
       }
-   };
-   
-   return (
-      <ProtectedRoute>
-         <Header title="Messages" subTitle="Configure membership levels and pricing" />
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, []);
 
-         {/* Tabs Navigation */}
+   useEffect(() => { load(); }, [load]);
+
+   const tabs = [
+      { id: 'log', label: 'Sent & Drafts', icon: FileText },
+      { id: 'templates', label: 'Templates', icon: ListOrdered },
+   ];
+
+   return (
+      <>
+         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            <Header title="Messages" subTitle="Email your members, track delivery, and manage reusable templates" />
+            <Link href="/message/add" className="flex items-center gap-2 px-4 py-2 bg-[var(--brand)] text-white rounded-lg font-medium shadow-sm self-start">
+               <Plus size={18} /> Compose Message
+            </Link>
+         </div>
+
+         {!emailEnabled && (
+            <div className="mb-6 flex gap-3 items-start p-4 rounded-lg border border-amber-200 bg-amber-50 text-amber-900 text-sm">
+               <Info size={18} className="shrink-0 mt-0.5" />
+               <p>
+                  Email sending isn’t switched on yet. You can write messages and choose who gets them. Pressing <b>Send</b> saves them as <b>Ready to send</b>, and you can send them with one click once email is connected.
+               </p>
+            </div>
+         )}
+
          <div className="flex items-center gap-8 border-b border-gray-200 mb-8">
-            {tabDatas.map(tab => (
-            <button
-               key={tab.label}
-               onClick={() => setActiveTab(tab.id)}
-               className={`
-                  px-5 py-3 text-sm font-semibold flex items-center space-x-2 transition-colors duration-150
-                  ${activeTab === tab.id 
-                     ? 'text-[var(--brand)] border-b-2 border-[var(--brand)]' 
-                     : 'text-gray-500 hover:text-gray-700'
-                  }
-               `}
-            >
-               <tab.icon size={16} /><span>{tab.label}</span>
-            </button>
+            {tabs.map((tab) => (
+               <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-5 py-3 text-sm font-semibold flex items-center space-x-2 transition-colors ${activeTab === tab.id ? 'text-[var(--brand)] border-b-2 border-[var(--brand)]' : 'text-gray-500 hover:text-gray-700'}`}
+               >
+                  <tab.icon size={16} /><span>{tab.label}</span>
+               </button>
             ))}
          </div>
 
-         {renderTabContent()}
-      </ProtectedRoute>
+         {loading ? (
+            <p className="text-gray-500">Loading…</p>
+         ) : activeTab === 'templates' ? (
+            <MessageList templates={templates} onChange={load} />
+         ) : (
+            <DeliveryLog messages={messages} emailEnabled={emailEnabled} onChange={load} />
+         )}
+      </>
+   );
+}
+
+// The admin check runs before the page mounts, so members never trigger its API calls.
+export default function MessagePage() {
+   return (
+      <AdminRoute>
+         <MessagePageInner />
+      </AdminRoute>
    );
 }

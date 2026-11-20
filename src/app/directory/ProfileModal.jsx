@@ -8,7 +8,7 @@ export default function ProfileModal ({ member, onClose }) {
    };
 
    const getInitials = (fullName) => {
-      const parts = fullName.split(' ');
+      const parts = (fullName || '?').split(' ');
       if (parts.length === 1) return parts[0][0];
       return parts.slice(0, 2).map(n => n[0]).join('');
    };
@@ -36,6 +36,10 @@ export default function ProfileModal ({ member, onClose }) {
                </div> 
                <div className="space-y-1">
                   <h2 className="text-xl font-semibold text-gray-900">{member.name}</h2>
+                  {(member.title || member.company) && (
+                     <p className="text-sm text-gray-800 flex items-center"><Building2 size={14} className="mr-1" />{[member.title, member.company].filter(Boolean).join(' · ')}</p>
+                  )}
+                  {member.location && <p className="text-sm text-gray-500 flex items-center"><MapPin size={14} className="mr-1" />{member.location}</p>}
                   <p className="text-sm text-gray-600">{member.membership?.name || (member.role === 2 ? 'Member' : 'Contact')}</p>
                   <div className="flex items-center text-sm text-gray-500">
                      <Mail size={14} className="mr-1" /> {member.email}
@@ -50,7 +54,7 @@ export default function ProfileModal ({ member, onClose }) {
             {member.about &&
             <div className="pt-4 border-t border-gray-200">
                <h3 className="text-base font-semibold text-gray-800 mb-2">About</h3>
-               <p className="text-sm text-gray-700 leading-relaxed">{member.about}</p>
+               <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{member.about}</p>
             </div> }
 
             {member.tags?.length > 0 &&
@@ -75,6 +79,16 @@ export default function ProfileModal ({ member, onClose }) {
                {member.phone && (
                   <a href={`tel:${member.phone}`} className="flex items-center w-full py-2 px-3 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
                      <Phone className="w-5 h-5 mr-3" /> Call {member.phone}
+                  </a>
+               )}
+               {member.website && (
+                  <a href={member.website} target="_blank" rel="noopener noreferrer" className="flex items-center w-full py-2 px-3 mt-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                     <Globe className="w-5 h-5 mr-3" /> Website
+                  </a>
+               )}
+               {member.linkedin && (
+                  <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center w-full py-2 px-3 mt-2 border border-gray-300 bg-white text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                     <Linkedin className="w-5 h-5 mr-3" /> LinkedIn
                   </a>
                )}
             </div>

@@ -3,7 +3,7 @@ import { Fragment, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/app/components/Header';
 import SearchBar from '@/app/components/SearchBar';
-import { Mail, Phone } from 'lucide-react';
+import { Mail, Phone, Building2, MapPin } from 'lucide-react';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
 import ProfileModal from '@/app/directory/ProfileModal';
 import { useApiClient } from "@/lib/apiClient";
@@ -41,7 +41,9 @@ export default function Directory() {
    const filters = ['All Status', ...Array.from(new Set(members.map((m) => m.membership?.name).filter(Boolean)))];
 
    const filteredMembers = members.filter(member => {
-      const matchesSearch = (member.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const q = searchTerm.toLowerCase();
+      const haystack = [member.name, member.company, member.title, member.location, ...(member.tags || [])].filter(Boolean).join(' ').toLowerCase();
+      const matchesSearch = haystack.includes(q);
       const matchesStatus = statusFilter === 'All' || statusFilter === 'All Status' || member.membership?.name === statusFilter;
       return matchesSearch && matchesStatus;
    });
@@ -67,6 +69,7 @@ export default function Directory() {
          <div className={`bg-white p-6 rounded-xl shadow-xl border border-gray-100`}>
 
             <SearchBar
+               placeholder="Search by name, company, location or expertise..."
                filters={filters}
                searchTerm={searchTerm}
                setSearchTerm={setSearchTerm}
@@ -83,6 +86,9 @@ export default function Directory() {
                         </div>
                         <div className="min-w-0">
                         <h3 className="text-lg font-bold text-gray-900">{member.name}</h3>
+                        {(member.title || member.company) && (
+                           <p className="text-sm text-gray-800 truncate">{[member.title, member.company].filter(Boolean).join(' · ')}</p>
+                        )}
                         <p className="text-sm text-gray-600 mb-1">{member.membership?.name || (member.role === 2 ? 'Member' : 'Contact')}</p>
                         <div className="flex items-center gap-1.5 text-sm text-gray-500">
                            <Mail size={14} className="shrink-0" />
@@ -91,10 +97,17 @@ export default function Directory() {
                         </div>
                      </div>
 
-                     <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-4">
+                     <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-1">
                         <Phone size={14} />
                         <span>{member.phone}</span>
                      </div>
+                     {member.location && (
+                        <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-1">
+                           <MapPin size={14} />
+                           <span className="truncate">{member.location}</span>
+                        </div>
+                     )}
+                     <div className="mb-3" />
 
                      <div className="flex flex-wrap gap-2 mb-6 flex-grow">
                         {member?.tags && (member.tags || []).map((tag, index) => (

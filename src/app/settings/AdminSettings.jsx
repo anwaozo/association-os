@@ -1,5 +1,5 @@
 'use client';
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import Header from '@/app/components/Header';
 import Payment from '@/app/settings/Payment';
 import Notification from '@/app/settings/Notification';
@@ -12,10 +12,16 @@ import { SHOW_PREVIEW } from '@/lib/features';
 export default function AdminSettings() {
    const [activeTab, setActiveTab] = useState('organization');
 
+   // Deep links such as /settings?tab=payments (Stripe sends admins back here).
+   useEffect(() => {
+      const tab = new URLSearchParams(window.location.search).get('tab');
+      if (tab === 'payments' || tab === 'profile') setActiveTab(tab);
+   }, []);
+
    const tabs = [
       { id: 'organization', label: 'Organization', icon: Building2 },
       { id: 'profile', label: 'My Profile', icon: CircleUser },
-      SHOW_PREVIEW && { id: 'payments', label: 'Payments', icon: WalletCards },
+      { id: 'payments', label: 'Payments', icon: WalletCards },
       SHOW_PREVIEW && { id: 'notifications', label: 'Notifications', icon: Bell },
    ].filter(Boolean);
 

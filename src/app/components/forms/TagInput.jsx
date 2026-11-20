@@ -1,20 +1,25 @@
 "use client";
 import { useState } from "react";
 
-export default function TagInput({ name, placeholder = "Type and press Enter...", initial = [] }) {
+export default function TagInput({ name, placeholder = "Type and press Enter...", initial = [], onChange, max }) {
    const [tags, setTags] = useState(() => (Array.isArray(initial) ? initial.map(String) : []));
    const [inputValue, setInputValue] = useState("");
 
+   const update = (next) => {
+      setTags(next);
+      onChange?.(next);
+   };
+
    const addTag = (value) => {
       const newTag = value.trim();
-      if (newTag && !tags.includes(newTag)) {
-         setTags([...tags, newTag]);
+      if (newTag && !tags.includes(newTag) && (!max || tags.length < max)) {
+         update([...tags, newTag]);
       }
       setInputValue("");
    };
 
    const removeTag = (index) => {
-      setTags(tags.filter((_, i) => i !== index));
+      update(tags.filter((_, i) => i !== index));
    };
 
    const handleKeyDown = (e) => {
@@ -49,6 +54,7 @@ export default function TagInput({ name, placeholder = "Type and press Enter..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
+            onBlur={() => inputValue.trim() && addTag(inputValue)}
             placeholder={placeholder}
             className="flex-grow outline-none min-w-[120px]"
          />

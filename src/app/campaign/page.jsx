@@ -4,14 +4,25 @@ import Currency from '@/app/components/Currency';
 import CampaignAddPage from '@/app/campaign/add/page';
 import { DollarSign } from 'lucide-react';
 import ProtectedRoute from '@/app/components/ProtectedRoute';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Link2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import { useApiClient } from "@/lib/apiClient";
 import { useToast } from "@/app/components/toast/ToastContext";
-import { SHOW_PREVIEW } from '@/lib/features';
 
 export default function CampaignPage() {
    const api = useApiClient();
    const { showToast } = useToast();
+   const { state } = useAuth();
+   const orgSlug = state?.organization?.slug;
+   const copyLink = async (c) => {
+      const url = `${window.location.origin}/give/${orgSlug}/${c.slug}`;
+      try {
+         await navigator.clipboard.writeText(url);
+         showToast('Public donation link copied');
+      } catch {
+         window.prompt('Copy this link:', url);
+      }
+   };
    const [contacts, setContacts] = useState([]);
    const [campaign, setCampaign] = useState([]);
    const [isModalOpen, setIsModalOpen] = useState(false);
@@ -72,9 +83,9 @@ export default function CampaignPage() {
          <div className="space-y-6">
             
             {/* Breadcrumb / Back Link */}
-            {SHOW_PREVIEW && (
+            {(
             <nav className="flex items-center space-x-2 text-sm text-gray-500 font-medium">
-               <button onClick={onBack} className="flex items-center hover:text-[var(--brand)] transition">
+               <button onClick={() => (window.location.href = '/fundraising')} className="flex items-center hover:text-[var(--brand)] transition">
                   <DollarSign className="w-4 h-4 mr-0.5" />
                   Fundraising
                </button>
@@ -97,7 +108,7 @@ export default function CampaignPage() {
                      <p className="text-gray-500">No campaigns yet. Use Create Campaign to start one.</p>
                   )}
                   {campaign.map((campaign) => {
-                     const received = Number(campaign?.received) || 0;
+                     const received = (Number(campaign?.raisedCents) || 0) / 100;
                      const goal = Number(campaign?.goal) || 1;
                      const percentRaised = Math.round((received / goal) * 100);
                      return (
@@ -109,6 +120,15 @@ export default function CampaignPage() {
                            </div>
                            <div className="flex items-center gap-4">
                               <span className="text-lg font-medium text-gray-500">{percentRaised}%</span>
+                              {campaign.isPublic && orgSlug && (
+                                 <button
+                                    onClick={() => copyLink(campaign)}
+                                    title="Copy the public donation page link"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                                 >
+                                    <Link2 size={14} /> Copy link
+                                 </button>
+                              )}
                               <button
                                  onClick={() => openEdit(campaign)}
                                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
@@ -127,6 +147,7 @@ export default function CampaignPage() {
                         
                         <div className="text-gray-600 text-lg">
                            <span className="font-medium text-gray-900"><Currency amount={received} /></span> of <Currency amount={goal} />
+                           <span className="text-sm text-gray-500 ml-2">· {campaign.donationCount || 0} {campaign.donationCount === 1 ? 'gift' : 'gifts'}</span>
                         </div>
                      </div>
                      );

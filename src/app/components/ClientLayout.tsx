@@ -6,7 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useApiClient } from "@/lib/apiClient";
 import { SHOW_PREVIEW } from "@/lib/features";
 
-const PREVIEW_ROUTES = ["/fundraising", "/notification", "/message"];
+// Routes that only exist as sample-data previews. (None right now.)
+const PREVIEW_ROUTES: string[] = [];
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
    const pathname = usePathname();

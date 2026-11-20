@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { usePathname } from "next/navigation";
@@ -14,35 +14,51 @@ import {
   LogOut,
   Menu,
   Mail,
-  ShieldCheck
+  ShieldCheck,
+  HeartHandshake
 } from 'lucide-react';
 import OrgBadge from '@/app/components/OrgBadge';
-import { SHOW_PREVIEW } from '@/lib/features';
+import { useApiClient } from '@/lib/apiClient';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
    const { state, logout } = useAuth();
    const user = state?.user;
    const org = state?.organization;
    const pathname = usePathname();
+   const api = useApiClient();
+   const [unread, setUnread] = useState(0);
+
+   // Unread activity badge for admins. Refreshes every minute and on navigation.
+   useEffect(() => {
+      if (user?.role !== 1) return;
+      let stop = false;
+      const load = () => api.get('/notifications/unread-count', { silent: true })
+         .then((r) => !stop && setUnread(r.data?.count || 0))
+         .catch(() => {});
+      load();
+      const t = setInterval(load, 60000);
+      const onSeen = () => setUnread(0);
+      window.addEventListener('aos:notifications-seen', onSeen);
+      return () => { stop = true; clearInterval(t); window.removeEventListener('aos:notifications-seen', onSeen); };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [user?.role, pathname]);
 
    const adminItems = [
       { name: 'Dashboard', icon: <LayoutGrid size={18} />, href: '/dashboard' },
       { name: 'Contacts & Members', icon: <Users size={18} />, href: '/contact' },
       { name: 'Events', icon: <Calendar size={18} />, href: '/event' },
       { name: 'Membership Tiers', icon: <Layers size={18} />, href: '/membership' },
-      // The fundraising overview still uses sample data; campaigns are live.
-      SHOW_PREVIEW
-         ? { name: 'Fundraising', icon: <DollarSign size={18} />, href: '/fundraising' }
-         : { name: 'Campaigns', icon: <DollarSign size={18} />, href: '/campaign' },
-      SHOW_PREVIEW && { name: 'Notifications', icon: <Bell size={18} />, href: '/notification' },
-      SHOW_PREVIEW && { name: 'Messages', icon: <Mail size={18} />, href: '/message' },
+      { name: 'Fundraising', icon: <DollarSign size={18} />, href: '/fundraising' },
+      { name: 'Notifications', icon: <Bell size={18} />, href: '/notification', badge: unread },
+      { name: 'Messages', icon: <Mail size={18} />, href: '/message' },
       { name: 'Settings', icon: <Settings size={18} />, href: '/settings' },
-   ].filter(Boolean);
+   ];
 
    const memberItems = [
       { name: 'Home', icon: <LayoutGrid size={18} />, href: '/dashboard' },
       { name: 'Events', icon: <Calendar size={18} />, href: '/event' },
       { name: 'Directory', icon: <Users size={18} />, href: '/directory' },
+      { name: 'Give', icon: <HeartHandshake size={18} />, href: '/fundraising/give' },
       { name: 'Settings', icon: <Settings size={18} />, href: '/settings' },
    ];
 
@@ -88,8 +104,16 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                            : "text-gray-800 hover:bg-[#EAEAEA] hover:text-black border-transparent"
                      }`}
                   >
-                     <span className="text-lg">{item.icon}</span>
-                     {isOpen && <span className="font-medium text-sm">{item.name}</span>}
+                     <span className="text-lg relative">
+                        {item.icon}
+                        {!isOpen && item.badge > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />}
+                     </span>
+                     {isOpen && <span className="font-medium text-sm flex-1">{item.name}</span>}
+                     {isOpen && item.badge > 0 && (
+                        <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-red-500 text-white text-xs font-semibold flex items-center justify-center" aria-label={`${item.badge} unread`}>
+                           {item.badge > 99 ? '99+' : item.badge}
+                        </span>
+                     )}
                   </Link>
                );
             })}
