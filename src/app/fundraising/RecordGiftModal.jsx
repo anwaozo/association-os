@@ -4,13 +4,18 @@ import { X } from 'lucide-react';
 import InputField from '@/app/components/forms/InputField';
 import { useApiClient } from '@/lib/apiClient';
 import { useToast } from '@/app/components/toast/ToastContext';
-import { isoDay } from '@/lib/csv';
+// Today's date in the admin's own time zone (toISOString would give UTC,
+// which is already tomorrow on a US evening).
+const localToday = () => {
+   const d = new Date();
+   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 // Record a gift that didn't come through Stripe (cash, check, outside platform).
 export default function RecordGiftModal({ campaigns, people, onClose, onSaved }) {
    const api = useApiClient();
    const { showToast } = useToast();
-   const [form, setForm] = useState({ amount: '', method: 'check', campaignId: '', userId: '', donorName: '', donorEmail: '', date: isoDay(new Date()), note: '', isAnonymous: false });
+   const [form, setForm] = useState({ amount: '', method: 'check', campaignId: '', userId: '', donorName: '', donorEmail: '', date: localToday(), note: '', isAnonymous: false });
    const [saving, setSaving] = useState(false);
    const set = (k) => (e) => setForm({ ...form, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
 
