@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Currency from '@/app/components/Currency';
-import { Search, Download, Plus, Trash2 } from 'lucide-react';
+import { Search, Download, Plus, Trash2, RotateCcw } from 'lucide-react';
 import { downloadCsv, isoDay } from '@/lib/csv';
 
 const METHOD_LABEL = { stripe: 'Online', cash: 'Cash', check: 'Check', other: 'Other' };
@@ -12,7 +12,7 @@ const STATUS_STYLE = {
    failed: 'bg-red-100 text-red-700',
 };
 
-export default function DonationsTable({ data, campaigns = [], onRecord, onDelete }) {
+export default function DonationsTable({ data, campaigns = [], onRecord, onDelete, onRefund, refundingId }) {
    const [searchTerm, setSearchTerm] = useState('');
    const [campaignId, setCampaignId] = useState('');
    const [method, setMethod] = useState('');
@@ -99,6 +99,16 @@ export default function DonationsTable({ data, campaigns = [], onRecord, onDelet
                         <td className="px-4 py-3 text-right">
                            {d.method !== 'stripe' && (
                               <button onClick={() => onDelete(d)} aria-label="Delete gift" title="Delete this recorded gift" className="p-1.5 text-gray-400 hover:text-red-600 rounded"><Trash2 size={16} /></button>
+                           )}
+                           {d.method === 'stripe' && d.status === 'succeeded' && onRefund && (
+                              <button
+                                 onClick={() => onRefund(d)}
+                                 disabled={refundingId === d.id}
+                                 title="Refund this online gift through Stripe"
+                                 className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-red-50 hover:text-red-700 hover:border-red-300 disabled:opacity-50 whitespace-nowrap"
+                              >
+                                 <RotateCcw size={12} /> {refundingId === d.id ? 'Refunding…' : 'Refund'}
+                              </button>
                            )}
                         </td>
                      </tr>

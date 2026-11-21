@@ -30,6 +30,7 @@ function FundraisingPageInner() {
    const [people, setPeople] = useState([]);
    const [stripe, setStripe] = useState(null);
    const [recording, setRecording] = useState(false);
+   const [refundingId, setRefundingId] = useState(null);
 
    const load = useCallback(async () => {
       try {
@@ -58,6 +59,21 @@ function FundraisingPageInner() {
          load();
       } catch {
          // toast shown by the API client
+      }
+   };
+
+   const refund = async (d) => {
+      const who = d.donorName || 'this donor';
+      if (!window.confirm(`Refund ${(d.amountCents / 100).toFixed(2)} USD to ${who}?\n\nThe full amount goes back to their card and comes out of your Stripe balance. This can't be undone.`)) return;
+      setRefundingId(d.id);
+      try {
+         await api.post(`/donations/${d.id}/refund`);
+         showToast('Refund issued', 'success');
+         load();
+      } catch {
+         // toast shown by the API client
+      } finally {
+         setRefundingId(null);
       }
    };
 
@@ -127,7 +143,7 @@ function FundraisingPageInner() {
             </div>
          </div>
 
-         <DonationsTable data={donations} campaigns={campaigns} onRecord={() => setRecording(true)} onDelete={remove} />
+         <DonationsTable data={donations} campaigns={campaigns} onRecord={() => setRecording(true)} onDelete={remove} onRefund={refund} refundingId={refundingId} />
 
          {recording && (
             <RecordGiftModal campaigns={campaigns} people={people} onClose={() => setRecording(false)} onSaved={() => { setRecording(false); load(); }} />
