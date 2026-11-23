@@ -103,7 +103,7 @@ function FundraisingPageInner() {
          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Tile title="Total raised" sub="All time"><Currency amount={(summary?.totalRaisedCents || 0) / 100} /></Tile>
             <Tile title="This month"><Currency amount={(summary?.thisMonthCents || 0) / 100} /></Tile>
-            <Tile title="Donors" sub={`${summary?.donationCount || 0} gifts`}>{summary?.donorCount || 0}</Tile>
+            <Tile title="Donors" sub={`${summary?.donationCount || 0} ${summary?.donationCount === 1 ? 'gift' : 'gifts'}`}>{summary?.donorCount || 0}</Tile>
             <Tile title="Average gift"><Currency amount={(summary?.averageCents || 0) / 100} /></Tile>
          </div>
 
