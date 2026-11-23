@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { 
    Search,
   Info,
@@ -41,11 +41,32 @@ export default function EventDetailPage({ params }) {
       if (new URLSearchParams(window.location.search).get('tab') === 'rsvps') setActiveTab('rsvps');
    }, []);
 
+   // Opened by direct link or reload: nothing is selected yet (or a different
+   // event is), so load the event by its slug. Only go back to the list if it
+   // really doesn't exist.
+   const routeParams = useParams();
+   const slug = routeParams?.slug;
    useEffect(() => {
-      if (!item) {
-         router.replace("/event"); // redirect back to the events list
-      }
-   }, [item]);
+      if (!slug || (item && item.slug === slug)) return;
+      let cancelled = false;
+      (async () => {
+         let found = null;
+         for (const path of ['/events', '/events/user']) {
+            try {
+               const res = await api.get(path);
+               const list = Array.isArray(res.data) ? res.data : (res.data?.events || res.data?.data || []);
+               found = list.find((e) => e.slug === slug) || null;
+               if (found) break;
+            } catch {
+               // Members can't read the admin list; try the next one.
+            }
+         }
+         if (cancelled) return;
+         if (found) setItem(found);
+         else router.replace("/event");
+      })();
+      return () => { cancelled = true; };
+   }, [slug]);
 
    const getStatusColor = (date) => {
       const status = getEventStatus(date);
@@ -438,8 +459,7 @@ export default function EventDetailPage({ params }) {
       }
    };
 
-   // Opened without an event selected (reload or direct link): the effect above
-   // sends the user back to the events list; render nothing meanwhile.
+   // While the event loads by slug (reload or direct link), show a placeholder.
    if (!item) {
       return <p className="text-gray-500">Loading event…</p>;
    }
